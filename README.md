@@ -1,7 +1,3 @@
-Sure — here’s the full, ready-to-copy version:
-
----
-
 # Jellio (Fork)
 
 This is a fork of [Vanchaxy’s Jellio plugin](https://github.com/vanchaxy/jellio), which connects Jellyfin to Stremio so you can stream your Jellyfin library inside Stremio.
