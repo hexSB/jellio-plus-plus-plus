@@ -51,11 +51,3 @@ All credit for the original work goes to Vanchaxy. This version includes small u
 * Jellyfin 10.11.0 or higher
 * .NET 9 (included with Jellyfin 10.11.x)
 * Stremio with internet access to your Jellyfin server
-
----
-
-## License
-
-MIT License.
-
----
