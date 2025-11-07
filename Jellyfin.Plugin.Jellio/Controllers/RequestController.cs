@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.Jellio.Helpers;
 using Jellyfin.Plugin.Jellio.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace Jellyfin.Plugin.Jellio.Controllers;
 
@@ -24,7 +26,9 @@ public class RequestController : ControllerBase
         client.Timeout = TimeSpan.FromSeconds(10);
         if (!string.IsNullOrWhiteSpace(apiKey))
         {
-            client.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
+            // Decode the base64-encoded API key
+            var decodedKey = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(apiKey));
+            client.DefaultRequestHeaders.Add("X-Api-Key", decodedKey);
         }
 
         return client;
