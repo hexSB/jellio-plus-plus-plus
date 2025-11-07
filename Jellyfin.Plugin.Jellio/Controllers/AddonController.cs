@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net.Http;
 using System.Net.Mime;
+using System.Text.Json;
+using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.Jellio.Helpers;
 using Jellyfin.Plugin.Jellio.Models;
@@ -27,18 +30,46 @@ public class AddonController : ControllerBase
     private readonly IUserViewManager _userViewManager;
     private readonly IDtoService _dtoService;
     private readonly ILibraryManager _libraryManager;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public AddonController(
         IUserManager userManager,
         IUserViewManager userViewManager,
         IDtoService dtoService,
-        ILibraryManager libraryManager
+        ILibraryManager libraryManager,
+        IHttpClientFactory httpClientFactory
     )
     {
         _userManager = userManager;
         _userViewManager = userViewManager;
         _dtoService = dtoService;
         _libraryManager = libraryManager;
+        _httpClientFactory = httpClientFactory;
+    }
+
+    private async Task<string?> GetTitleFromCinemeta(string imdbId, string type)
+    {
+        try
+        {
+            using var client = _httpClientFactory.CreateClient();
+            var stremioType = type == "movie" ? "movie" : "series";
+            var response = await client.GetAsync($"https://v3-cinemeta.strem.io/meta/{stremioType}/tt{imdbId}.json");
+            if (response.IsSuccessStatusCode)
+            {
+                using var doc = JsonDocument.Parse(await response.Content.ReadAsStreamAsync());
+                if (doc.RootElement.TryGetProperty("meta", out var meta) &&
+                    meta.TryGetProperty("name", out var name))
+                {
+                    return name.GetString();
+                }
+            }
+        }
+        catch
+        {
+            // If Cinemeta fails, we'll just return null
+        }
+
+        return null;
     }
 
     private string GetBaseUrl(string? overrideBaseUrl = null)
@@ -337,7 +368,7 @@ public class AddonController : ControllerBase
     }
 
     [HttpGet("stream/movie/tt{imdbId}.json")]
-    public IActionResult GetStreamImdbMovie(
+    public async Task<IActionResult> GetStreamImdbMovie(
         [ConfigFromBase64Json] ConfigModel config,
         string imdbId
     )
@@ -362,13 +393,17 @@ public class AddonController : ControllerBase
             // No local stream found; provide a Jellyseerr request stream if configured
             if (config.JellyseerrEnabled && !string.IsNullOrWhiteSpace(config.JellyseerrUrl))
             {
-                var baseUrl = GetBaseUrl(config.PublicBaseUrl);
-                var requestUrl = $"{baseUrl}/jellio/{Request.RouteValues["config"]}/request?type=movie&imdbId=tt{imdbId}";
-                var streams = new[]
+                var title = await GetTitleFromCinemeta(imdbId, "movie");
+                if (!string.IsNullOrWhiteSpace(title))
                 {
-                    new { url = requestUrl, name = "📥 Request via Jellyseerr", description = "Click to send request to Jellyseerr" }
-                };
-                return Ok(new { streams });
+                    var baseUrl = GetBaseUrl(config.PublicBaseUrl);
+                    var requestUrl = $"{baseUrl}/jellio/{Request.RouteValues["config"]}/request?type=movie&imdbId=tt{imdbId}&title={Uri.EscapeDataString(title)}";
+                    var streams = new[]
+                    {
+                        new { url = requestUrl, name = "📥 Request via Jellyseerr", description = "Click to send request to Jellyseerr" }
+                    };
+                    return Ok(new { streams });
+                }
             }
 
             return Ok(new { streams = Array.Empty<object>() });
@@ -378,7 +413,7 @@ public class AddonController : ControllerBase
     }
 
     [HttpGet("stream/series/tt{imdbId}:{seasonNum:int}:{episodeNum:int}.json")]
-    public IActionResult GetStreamImdbTv(
+    public async Task<IActionResult> GetStreamImdbTv(
         [ConfigFromBase64Json] ConfigModel config,
         string imdbId,
         int seasonNum,
@@ -420,13 +455,17 @@ public class AddonController : ControllerBase
         {
             if (config.JellyseerrEnabled && !string.IsNullOrWhiteSpace(config.JellyseerrUrl))
             {
-                var baseUrl = GetBaseUrl(config.PublicBaseUrl);
-                var requestUrl = $"{baseUrl}/jellio/{Request.RouteValues["config"]}/request?type=tv&imdbId=tt{imdbId}&season={seasonNum}&episode={episodeNum}";
-                var streams = new[]
+                var title = await GetTitleFromCinemeta(imdbId, "tv");
+                if (!string.IsNullOrWhiteSpace(title))
                 {
-                    new { url = requestUrl, name = "📥 Request via Jellyseerr", description = "Click to send request to Jellyseerr" }
-                };
-                return Ok(new { streams });
+                    var baseUrl = GetBaseUrl(config.PublicBaseUrl);
+                    var requestUrl = $"{baseUrl}/jellio/{Request.RouteValues["config"]}/request?type=tv&imdbId=tt{imdbId}&title={Uri.EscapeDataString(title)}&season={seasonNum}&episode={episodeNum}";
+                    var streams = new[]
+                    {
+                        new { url = requestUrl, name = "📥 Request via Jellyseerr", description = "Click to send request to Jellyseerr" }
+                    };
+                    return Ok(new { streams });
+                }
             }
 
             return Ok(new { streams = Array.Empty<object>() });

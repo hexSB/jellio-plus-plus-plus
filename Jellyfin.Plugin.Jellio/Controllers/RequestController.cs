@@ -36,6 +36,7 @@ public class RequestController : ControllerBase
         [FromQuery] string type,
         [FromQuery] int? tmdbId,
         [FromQuery] string? imdbId,
+        [FromQuery] string? title,
         [FromQuery] int? season,
         [FromQuery] int? episode
     )
@@ -51,10 +52,15 @@ public class RequestController : ControllerBase
         {
             using var client = CreateHttpClient(config.JellyseerrUrl!, config.JellyseerrApiKey);
 
-            // Resolve TMDB via Jellyseerr search if not provided but imdbId is available
-            if (maybeTmdbId is null && !string.IsNullOrWhiteSpace(imdbId))
+            // Resolve TMDB ID via Jellyseerr search if not provided
+            if (maybeTmdbId is null)
             {
-                var searchUri = $"api/v1/search?query={Uri.EscapeDataString(imdbId!)}";
+                if (string.IsNullOrWhiteSpace(title))
+                {
+                    return Problem("Either tmdbId or title parameter is required.", statusCode: 400);
+                }
+
+                var searchUri = $"api/v1/search?query={Uri.EscapeDataString(title!)}";
                 using var resp = await client.GetAsync(searchUri);
                 if (resp.IsSuccessStatusCode)
                 {
@@ -66,15 +72,9 @@ public class RequestController : ControllerBase
                             var mediaType = el.TryGetProperty("mediaType", out var mt) ? mt.GetString() : null;
                             if (!string.IsNullOrEmpty(mediaType) && string.Equals(mediaType, type, StringComparison.OrdinalIgnoreCase))
                             {
-                                if (el.TryGetProperty("tmdbId", out var tmdbEl) && tmdbEl.TryGetInt32(out var tmdbVal))
-                                {
-                                    maybeTmdbId = tmdbVal;
-                                    break;
-                                }
-
                                 if (el.TryGetProperty("id", out var idEl) && idEl.TryGetInt32(out var idVal))
                                 {
-                                    maybeTmdbId = idVal; // some responses use 'id' as TMDB id
+                                    maybeTmdbId = idVal;
                                     break;
                                 }
                             }
@@ -102,7 +102,7 @@ public class RequestController : ControllerBase
             var body = new
             {
                 mediaType = string.Equals(type, "tv", StringComparison.OrdinalIgnoreCase) ? "tv" : "movie",
-                tmdbId = id,
+                mediaId = id,
                 seasons
             };
 
