@@ -15,14 +15,14 @@ All credit for the original work goes to Vanchaxy. This version includes small u
 2. Add this URL:
 
    ```
-   https://raw.githubusercontent.com/InfiniteAvenger/jellio/metadata/jellyfin-repo-manifest.json
+   https://raw.githubusercontent.com/InfiniteAvenger/jellio-jellyfin10.11.x/metadata/jellyfin-repo-manifest.json
    ```
 3. Go to **Plugins → Catalog**, find **Jellio**, and install it
 4. Restart Jellyfin
 
 **Option 2: Manual**
 
-1. Download the latest `.zip` from [Releases](https://github.com/InfiniteAvenger/jellio/releases)
+1. Download the latest `.zip` from [Releases](https://github.com/InfiniteAvenger/jellio-jellyfin10.11.x/releases)
 2. Extract it to your Jellyfin plugins folder
 
    * Windows: `C:\ProgramData\Jellyfin\Server\plugins\Jellio\`
