@@ -30,30 +30,27 @@ public class AddonController : ControllerBase
     private readonly IUserViewManager _userViewManager;
     private readonly IDtoService _dtoService;
     private readonly ILibraryManager _libraryManager;
-    private readonly IHttpClientFactory _httpClientFactory;
+    private static readonly HttpClient _httpClient = new();
 
     public AddonController(
         IUserManager userManager,
         IUserViewManager userViewManager,
         IDtoService dtoService,
-        ILibraryManager libraryManager,
-        IHttpClientFactory httpClientFactory
+        ILibraryManager libraryManager
     )
     {
         _userManager = userManager;
         _userViewManager = userViewManager;
         _dtoService = dtoService;
         _libraryManager = libraryManager;
-        _httpClientFactory = httpClientFactory;
     }
 
     private async Task<string?> GetTitleFromCinemeta(string imdbId, string type)
     {
         try
         {
-            using var client = _httpClientFactory.CreateClient();
             var stremioType = type == "movie" ? "movie" : "series";
-            var response = await client.GetAsync($"https://v3-cinemeta.strem.io/meta/{stremioType}/tt{imdbId}.json");
+            var response = await _httpClient.GetAsync($"https://v3-cinemeta.strem.io/meta/{stremioType}/tt{imdbId}.json");
             if (response.IsSuccessStatusCode)
             {
                 using var doc = JsonDocument.Parse(await response.Content.ReadAsStreamAsync());
