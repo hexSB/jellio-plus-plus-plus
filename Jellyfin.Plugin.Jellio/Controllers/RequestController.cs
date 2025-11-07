@@ -26,9 +26,17 @@ public class RequestController : ControllerBase
         client.Timeout = TimeSpan.FromSeconds(10);
         if (!string.IsNullOrWhiteSpace(apiKey))
         {
-            // Decode the base64-encoded API key
-            var decodedKey = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(apiKey));
-            client.DefaultRequestHeaders.Add("X-Api-Key", decodedKey);
+            try
+            {
+                // Decode the base64-encoded API key
+                var decodedKey = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(apiKey));
+                client.DefaultRequestHeaders.Add("X-Api-Key", decodedKey);
+            }
+            catch
+            {
+                // If decoding fails, use the key as-is (might already be decoded)
+                client.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
+            }
         }
 
         return client;
