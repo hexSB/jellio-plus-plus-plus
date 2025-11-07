@@ -12,6 +12,7 @@ export const formSchema = z.object({
   jellyseerrEnabled: z.boolean().default(false),
   jellyseerrUrl: z.string().url().or(z.literal('')).default(''),
   jellyseerrApiKey: z.string().default(''),
+  publicBaseUrl: z.string().url().or(z.literal('')).default(''),
 });
 
 export type ConfigFormType = z.infer<typeof formSchema>;

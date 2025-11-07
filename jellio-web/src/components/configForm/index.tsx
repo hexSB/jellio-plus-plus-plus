@@ -32,6 +32,7 @@ const ConfigForm: FC<Props> = ({ serverInfo }) => {
       jellyseerrEnabled: false,
       jellyseerrUrl: '',
       jellyseerrApiKey: '',
+      publicBaseUrl: '',
     },
   });
 
@@ -53,6 +54,9 @@ const ConfigForm: FC<Props> = ({ serverInfo }) => {
       configuration.JellyseerrEnabled = true;
       configuration.JellyseerrUrl = values.jellyseerrUrl;
       if (values.jellyseerrApiKey) configuration.JellyseerrApiKey = values.jellyseerrApiKey;
+    }
+    if (values.publicBaseUrl) {
+      configuration.PublicBaseUrl = values.publicBaseUrl;
     }
     const encodedConfiguration = encode(JSON.stringify(configuration), true);
     const addonUrl = `${getBaseUrl()}/${encodedConfiguration}/manifest.json`;

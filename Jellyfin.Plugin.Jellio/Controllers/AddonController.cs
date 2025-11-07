@@ -42,8 +42,12 @@ public class AddonController : ControllerBase
         _libraryManager = libraryManager;
     }
 
-    private string GetBaseUrl()
+    private string GetBaseUrl(string? overrideBaseUrl = null)
     {
+        if (!string.IsNullOrWhiteSpace(overrideBaseUrl))
+        {
+            return overrideBaseUrl!.TrimEnd('/');
+        }
         return $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
     }
 
@@ -113,7 +117,7 @@ public class AddonController : ControllerBase
             return Ok(new { streams = Array.Empty<object>() });
         }
 
-        var baseUrl = GetBaseUrl();
+    var baseUrl = GetBaseUrl();
         var dtoOptions = new DtoOptions(true);
         var dtos = _dtoService.GetBaseItemDtos(items, dtoOptions, user);
         var streams = dtos.SelectMany(dto =>
@@ -250,7 +254,7 @@ public class AddonController : ControllerBase
         };
         var result = folder.GetItems(query);
         var dtos = _dtoService.GetBaseItemDtos(result.Items, dtoOptions, user);
-        var baseUrl = GetBaseUrl();
+    var baseUrl = GetBaseUrl();
         var metas = dtos.Select(dto => MapToMeta(dto, stremioType, baseUrl));
 
         return Ok(new { metas });
@@ -358,7 +362,7 @@ public class AddonController : ControllerBase
             // No local stream found; provide a Jellyseerr request link if configured
             if (config.JellyseerrEnabled && !string.IsNullOrWhiteSpace(config.JellyseerrUrl))
             {
-                var baseUrl = GetBaseUrl();
+                var baseUrl = GetBaseUrl(config.PublicBaseUrl);
                 var requestUrl = $"{baseUrl}/jellio/{Request.RouteValues["config"]}/request?type=movie&imdbId=tt{imdbId}";
                 var streams = new[]
                 {
@@ -416,7 +420,7 @@ public class AddonController : ControllerBase
         {
             if (config.JellyseerrEnabled && !string.IsNullOrWhiteSpace(config.JellyseerrUrl))
             {
-                var baseUrl = GetBaseUrl();
+                var baseUrl = GetBaseUrl(config.PublicBaseUrl);
                 var requestUrl = $"{baseUrl}/jellio/{Request.RouteValues["config"]}/request?type=tv&imdbId=tt{imdbId}&season={seasonNum}&episode={episodeNum}";
                 var streams = new[]
                 {

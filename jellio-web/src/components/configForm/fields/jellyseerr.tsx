@@ -67,6 +67,22 @@ export const JellyseerrFieldset: FC<Props> = ({ form }) => {
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="publicBaseUrl"
+            render={({ field }) => (
+              <FormItem className="md:col-span-2">
+                <FormLabel>Public Base URL (optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="https://jellyfin.example.com" {...field} />
+                </FormControl>
+                <FormDescription>
+                  If your Jellyfin runs behind a proxy/tunnel (e.g., Cloudflare), set your public HTTPS base URL here so request links use it.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
       )}
     </fieldset>
