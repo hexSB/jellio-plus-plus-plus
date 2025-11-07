@@ -2,9 +2,10 @@
 
 ## 🎉 New Features
 
-### Jellyseerr Integration
-- **Automatic Content Requests**: When a movie or TV episode isn't available in your Jellyfin library, Jellio now displays a "Request via Jellyseerr" option in Stremio
-- **No Redirects**: Clicking the request link opens it externally without redirecting you away from Stremio
+### Seamless Jellyseerr Integration
+- **Automatic Content Requests**: When a movie or TV episode isn't available in your Jellyfin library, Jellio now displays a "📥 Request via Jellyseerr" option in Stremio
+- **Truly Seamless**: Click once and the request is automatically sent to Jellyseerr - **no browser opens, no redirects!**
+- **Works Everywhere**: Desktop, Web, Mobile (iOS/Android), and TV clients (LG, Samsung, etc.)
 - **Smart TMDB Resolution**: Automatically resolves TMDB IDs from IMDB IDs using Jellyseerr's search API
 - **Season-level Requests**: For TV shows, requests entire seasons (not just individual episodes)
 
@@ -23,9 +24,10 @@
 
 ### How It Works
 1. User browses content in Stremio via Jellio
-2. If content isn't in Jellyfin library, "Request via Jellyseerr" option appears
-3. Clicking opens request in browser, automatically creating the request in Jellyseerr
-4. No need to manually search or submit requests!
+2. If content isn't in Jellyfin library, "📥 Request via Jellyseerr" option appears
+3. User clicks once - request is automatically sent in the background
+4. No browser windows, no navigation away from Stremio!
+5. Works perfectly on all platforms: Desktop, Mobile, and TV clients
 
 ## 📋 What's Changed
 - Added `RequestController` for Jellyseerr API integration
