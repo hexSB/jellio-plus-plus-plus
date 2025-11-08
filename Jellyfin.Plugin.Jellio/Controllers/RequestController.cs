@@ -26,17 +26,13 @@ public class RequestController : ControllerBase
         client.Timeout = TimeSpan.FromSeconds(10);
         if (!string.IsNullOrWhiteSpace(apiKey))
         {
-            try
-            {
-                // Decode the base64-encoded API key
-                var decodedKey = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(apiKey));
-                client.DefaultRequestHeaders.Add("X-Api-Key", decodedKey);
-            }
-            catch
-            {
-                // If decoding fails, use the key as-is (might already be decoded)
-                client.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
-            }
+            // API keys from the config are stored in plain text, use directly
+            Console.WriteLine($"[Jellyseerr] Using API key: {apiKey.Substring(0, Math.Min(8, apiKey.Length))}... (length: {apiKey.Length})");
+            client.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
+        }
+        else
+        {
+            Console.WriteLine("[Jellyseerr] WARNING: No API key provided!");
         }
 
         return client;
