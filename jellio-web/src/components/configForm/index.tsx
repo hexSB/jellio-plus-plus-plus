@@ -16,6 +16,7 @@ import {
 import { Form } from '@/components/ui/form';
 import { getBaseUrl } from '@/lib/utils';
 import { startAddonSession } from '@/services/backendService';
+import { useConfigStorage } from '@/hooks/useConfigStorage';
 import type { ServerInfo } from '@/types';
 
 interface Props {
@@ -36,12 +37,22 @@ const ConfigForm: FC<Props> = ({ serverInfo }) => {
     },
   });
 
+  // Load and save config to localStorage
+  const { saveConfig } = useConfigStorage(form);
+
   const serverName = form.watch('serverName');
 
   const isHttps = window.location.protocol === 'https:';
 
   const handleInstall = async (action: 'clipboard' | 'web' | 'client') => {
     const values = form.getValues();
+    
+    // Save config to localStorage before generating addon URL
+    saveConfig();
+    
+    // Helper to strip trailing slashes
+    const stripTrailingSlash = (url: string) => url?.replace(/\/+$/, '') || '';
+    
     const newToken = await startAddonSession(serverInfo.accessToken);
     const configuration: any = {
       AuthToken: newToken,
@@ -52,11 +63,11 @@ const ConfigForm: FC<Props> = ({ serverInfo }) => {
     };
     if (values.jellyseerrEnabled && values.jellyseerrUrl) {
       configuration.JellyseerrEnabled = true;
-      configuration.JellyseerrUrl = values.jellyseerrUrl;
+      configuration.JellyseerrUrl = stripTrailingSlash(values.jellyseerrUrl);
       if (values.jellyseerrApiKey) configuration.JellyseerrApiKey = values.jellyseerrApiKey;
     }
     if (values.publicBaseUrl) {
-      configuration.PublicBaseUrl = values.publicBaseUrl;
+      configuration.PublicBaseUrl = stripTrailingSlash(values.publicBaseUrl);
     }
     const encodedConfiguration = encode(JSON.stringify(configuration), true);
     const addonUrl = `${getBaseUrl()}/${encodedConfiguration}/manifest.json`;

@@ -48,7 +48,10 @@ export const JellyseerrFieldset: FC<Props> = ({ form }) => {
                 <FormControl>
                   <Input placeholder="https://jellyseerr.example.com" {...field} />
                 </FormControl>
-                <FormDescription>Public URL to your Jellyseerr instance.</FormDescription>
+                <FormDescription className="text-xs">
+                  <strong>Use your public/Cloudflare Tunnel URL</strong> (accessible from anywhere).
+                  Do NOT include a trailing slash. Example: <code className="text-xs bg-muted px-1 rounded">https://jellyseerr.example.com</code>
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -76,8 +79,9 @@ export const JellyseerrFieldset: FC<Props> = ({ form }) => {
                 <FormControl>
                   <Input placeholder="https://jellyfin.example.com" {...field} />
                 </FormControl>
-                <FormDescription>
-                  If your Jellyfin runs behind a proxy/tunnel (e.g., Cloudflare), set your public HTTPS base URL here so request links use it.
+                <FormDescription className="text-xs">
+                  <strong>Use your Cloudflare Tunnel or public URL</strong> for Jellyfin if different from where you're accessing this page.
+                  Do NOT include a trailing slash. Example: <code className="text-xs bg-muted px-1 rounded">https://jellyfin.example.com</code>
                 </FormDescription>
                 <FormMessage />
               </FormItem>
