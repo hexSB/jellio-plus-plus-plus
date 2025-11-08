@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -17,6 +18,55 @@ namespace Jellyfin.Plugin.Jellio.Controllers;
 [Route("jellio/{config}/jellyseerr")]
 public class RequestController : ControllerBase
 {
+    // Simple in-memory cache to prevent duplicate requests (userId:imdbId:type -> timestamp)
+    private static readonly ConcurrentDictionary<string, DateTime> _requestCache = new();
+    private static readonly TimeSpan _cacheDuration = TimeSpan.FromSeconds(30);
+
+    private static bool IsRecentlyRequested(Guid userId, string identifier, string type)
+    {
+        var cacheKey = $"{userId}:{identifier}:{type}";
+        
+        if (_requestCache.TryGetValue(cacheKey, out var timestamp))
+        {
+            if (DateTime.UtcNow - timestamp < _cacheDuration)
+            {
+                Console.WriteLine($"[Jellyseerr] Skipping duplicate request (cached {(DateTime.UtcNow - timestamp).TotalSeconds:F1}s ago)");
+                return true;
+            }
+            
+            // Remove expired entry
+            _requestCache.TryRemove(cacheKey, out _);
+        }
+        
+        return false;
+    }
+
+    private static void MarkAsRequested(Guid userId, string identifier, string type)
+    {
+        var cacheKey = $"{userId}:{identifier}:{type}";
+        _requestCache[cacheKey] = DateTime.UtcNow;
+        
+        // Clean up old entries periodically
+        if (_requestCache.Count > 1000)
+        {
+            var cutoff = DateTime.UtcNow - _cacheDuration;
+            var keysToRemove = new List<string>();
+            
+            foreach (var kvp in _requestCache)
+            {
+                if (kvp.Value < cutoff)
+                {
+                    keysToRemove.Add(kvp.Key);
+                }
+            }
+            
+            foreach (var key in keysToRemove)
+            {
+                _requestCache.TryRemove(key, out _);
+            }
+        }
+    }
+
     private static HttpClient CreateHttpClient(string baseUrl, string? apiKey)
     {
         var client = new HttpClient
@@ -57,6 +107,21 @@ public class RequestController : ControllerBase
             {
                 Console.WriteLine("[Jellyseerr] ERROR: Config is null");
                 return BadRequest("Invalid or missing configuration.");
+            }
+
+            // Get userId from context (set by ConfigAuthorize filter)
+            var userId = (Guid?)HttpContext.Items["JellioUserId"];
+            if (userId == null)
+            {
+                Console.WriteLine("[Jellyseerr] ERROR: No user ID in context");
+                return Unauthorized();
+            }
+
+            // Check for duplicate request
+            var identifier = imdbId ?? tmdbId?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? title ?? "unknown";
+            if (IsRecentlyRequested(userId.Value, identifier, type))
+            {
+                return Content("✓ Request already sent (duplicate prevented)", "text/plain");
             }
 
             Console.WriteLine($"[Jellyseerr] Config loaded: Enabled={config.JellyseerrEnabled}, Url={config.JellyseerrUrl}, HasApiKey={!string.IsNullOrWhiteSpace(config.JellyseerrApiKey)}");
@@ -159,6 +224,10 @@ public class RequestController : ControllerBase
             if (createResp.IsSuccessStatusCode)
             {
                 Console.WriteLine("[Jellyseerr] ✓ Request successful!");
+                
+                // Mark as requested to prevent duplicates
+                MarkAsRequested(userId.Value, identifier, type);
+                
                 // Return a simple success message
                 // Stremio will attempt to play this URL, fail gracefully, but the request is already sent
                 return Content("✓ Content request sent to Jellyseerr successfully!", "text/plain");
