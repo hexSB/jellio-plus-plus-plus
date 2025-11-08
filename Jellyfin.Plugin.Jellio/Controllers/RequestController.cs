@@ -122,23 +122,35 @@ public class RequestController : ControllerBase
             int id = maybeTmdbId.Value;
             Console.WriteLine($"[Jellyseerr] Using TMDB ID: {id}");
             
-            int[]? seasons = null;
-            if (string.Equals(type, "tv", StringComparison.OrdinalIgnoreCase))
+            bool isTV = string.Equals(type, "tv", StringComparison.OrdinalIgnoreCase);
+            
+            // Build request body - only include seasons for TV shows
+            object body;
+            if (isTV)
             {
-                // Always request the entire season if a season is specified
+                int[]? seasons = null;
                 if (season.HasValue)
                 {
                     seasons = new[] { season.Value };
                     Console.WriteLine($"[Jellyseerr] Requesting TV season: {season.Value}");
                 }
+                
+                body = new
+                {
+                    mediaType = "tv",
+                    mediaId = id,
+                    seasons
+                };
             }
-
-            var body = new
+            else
             {
-                mediaType = string.Equals(type, "tv", StringComparison.OrdinalIgnoreCase) ? "tv" : "movie",
-                mediaId = id,
-                seasons
-            };
+                // For movies, don't include seasons field at all
+                body = new
+                {
+                    mediaType = "movie",
+                    mediaId = id
+                };
+            }
 
             Console.WriteLine($"[Jellyseerr] Sending request to Jellyseerr: {config.JellyseerrUrl}/api/v1/request");
             using var createResp = await client.PostAsJsonAsync("api/v1/request", body);
