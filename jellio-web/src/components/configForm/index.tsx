@@ -2,7 +2,7 @@ import type { FC } from 'react';
 import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { encode } from 'js-base64';
-import { Clipboard, Globe, Monitor } from 'lucide-react';
+import { Clipboard, Globe, Monitor, Save } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { LibrariesField, ServerNameField, JellyseerrFieldset } from '@/components/configForm/fields';
 import { formSchema } from '@/components/configForm/formSchema.tsx';
@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Form } from '@/components/ui/form';
 import { getBaseUrl } from '@/lib/utils';
-import { startAddonSession } from '@/services/backendService';
+import { startAddonSession, saveConfigToServer } from '@/services/backendService';
 import { useConfigStorage } from '@/hooks/useConfigStorage';
 import type { ServerInfo } from '@/types';
 
@@ -25,6 +25,9 @@ interface Props {
 
 const ConfigForm: FC<Props> = ({ serverInfo }) => {
   const [copied, setCopied] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -37,12 +40,45 @@ const ConfigForm: FC<Props> = ({ serverInfo }) => {
     },
   });
 
-  // Load and save config to localStorage
-  const { saveConfig } = useConfigStorage(form);
+  // Load and save config to localStorage and server
+  const { saveConfig } = useConfigStorage(form, serverInfo.accessToken);
 
   const serverName = form.watch('serverName');
 
   const isHttps = window.location.protocol === 'https:';
+
+  const handleSaveToServer = async () => {
+    setSaving(true);
+    setSaved(false);
+    try {
+      const values = form.getValues();
+      
+      // Strip trailing slashes
+      const stripTrailingSlash = (url: string) => url?.replace(/\/+$/, '') || '';
+      
+      // Save to localStorage first
+      saveConfig();
+      
+      // Then save to Jellyfin server
+      await saveConfigToServer(
+        {
+          jellyseerrEnabled: values.jellyseerrEnabled ?? false,
+          jellyseerrUrl: stripTrailingSlash(values.jellyseerrUrl ?? ''),
+          jellyseerrApiKey: values.jellyseerrApiKey ?? '',
+          publicBaseUrl: stripTrailingSlash(values.publicBaseUrl ?? ''),
+        },
+        serverInfo.accessToken,
+      );
+      
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (error) {
+      console.error('Failed to save configuration:', error);
+      alert('Failed to save configuration to server');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleInstall = async (action: 'clipboard' | 'web' | 'client') => {
     const values = form.getValues();
@@ -92,7 +128,17 @@ const ConfigForm: FC<Props> = ({ serverInfo }) => {
           libraries={serverInfo.libraries}
         />
         <JellyseerrFieldset form={form} />
-        <div className="flex flex-col items-center justify-center p-3">
+        <div className="flex flex-col items-center justify-center gap-2 p-3">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full max-w-md"
+            onClick={handleSaveToServer}
+            disabled={saving}
+          >
+            <Save className="mr-2 h-4 w-4" />
+            {saved ? 'Saved to Jellyfin!' : saving ? 'Saving...' : 'Save Configuration to Jellyfin'}
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

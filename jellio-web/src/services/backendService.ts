@@ -53,3 +53,58 @@ export const startAddonSession = async (token?: string): Promise<string> => {
     throw error;
   }
 };
+
+export interface SaveConfigData {
+  jellyseerrEnabled: boolean;
+  jellyseerrUrl?: string;
+  jellyseerrApiKey?: string;
+  publicBaseUrl?: string;
+}
+
+export const saveConfigToServer = async (
+  config: SaveConfigData,
+  token?: string,
+): Promise<void> => {
+  try {
+    const headers: Record<string, string> = {};
+    if (token) {
+      const deviceId = getOrCreateDeviceId();
+      headers['Authorization'] = `MediaBrowser Token="${token}"`;
+      headers['X-Emby-Token'] = token;
+      headers['X-Emby-Authorization'] = `MediaBrowser Client="Jellio", Device="Web", DeviceId="${deviceId}", Version="0.0.0", Token="${token}"`;
+    }
+
+    await axios.post(`${getBaseUrl()}/save-config`, config, {
+      headers,
+      withCredentials: true,
+    });
+  } catch (error) {
+    console.error('Error saving configuration:', error);
+    throw error;
+  }
+};
+
+export const getConfigFromServer = async (
+  token?: string,
+): Promise<SaveConfigData> => {
+  try {
+    const headers: Record<string, string> = {};
+    if (token) {
+      const deviceId = getOrCreateDeviceId();
+      headers['Authorization'] = `MediaBrowser Token="${token}"`;
+      headers['X-Emby-Token'] = token;
+      headers['X-Emby-Authorization'] = `MediaBrowser Client="Jellio", Device="Web", DeviceId="${deviceId}", Version="0.0.0", Token="${token}"`;
+    }
+
+    const response = await axios.get(`${getBaseUrl()}/get-config`, {
+      headers,
+      withCredentials: true,
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error getting configuration:', error);
+    throw error;
+  }
+};
+

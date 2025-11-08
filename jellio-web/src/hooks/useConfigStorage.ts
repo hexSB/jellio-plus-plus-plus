@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
+import { getConfigFromServer } from '@/services/backendService';
 
 const STORAGE_KEY = 'jellio_config';
 
@@ -10,32 +11,56 @@ interface StoredConfig {
   publicBaseUrl?: string;
 }
 
-export const useConfigStorage = (form: UseFormReturn<any>) => {
-  // Load config from localStorage on mount
+export const useConfigStorage = (form: UseFormReturn<any>, accessToken?: string) => {
+  // Load config from localStorage and server on mount
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const config: StoredConfig = JSON.parse(stored);
-        
-        // Update form with stored values
-        if (config.jellyseerrEnabled !== undefined) {
-          form.setValue('jellyseerrEnabled', config.jellyseerrEnabled);
+    const loadConfig = async () => {
+      try {
+        // First try localStorage (faster)
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const config: StoredConfig = JSON.parse(stored);
+          
+          // Update form with stored values
+          if (config.jellyseerrEnabled !== undefined) {
+            form.setValue('jellyseerrEnabled', config.jellyseerrEnabled);
+          }
+          if (config.jellyseerrUrl) {
+            form.setValue('jellyseerrUrl', config.jellyseerrUrl);
+          }
+          if (config.jellyseerrApiKey) {
+            form.setValue('jellyseerrApiKey', config.jellyseerrApiKey);
+          }
+          if (config.publicBaseUrl) {
+            form.setValue('publicBaseUrl', config.publicBaseUrl);
+          }
         }
-        if (config.jellyseerrUrl) {
-          form.setValue('jellyseerrUrl', config.jellyseerrUrl);
+
+        // Then try server config (may override localStorage)
+        if (accessToken) {
+          const serverConfig = await getConfigFromServer(accessToken);
+          if (serverConfig) {
+            if (serverConfig.jellyseerrEnabled !== undefined) {
+              form.setValue('jellyseerrEnabled', serverConfig.jellyseerrEnabled);
+            }
+            if (serverConfig.jellyseerrUrl) {
+              form.setValue('jellyseerrUrl', serverConfig.jellyseerrUrl);
+            }
+            if (serverConfig.jellyseerrApiKey) {
+              form.setValue('jellyseerrApiKey', serverConfig.jellyseerrApiKey);
+            }
+            if (serverConfig.publicBaseUrl) {
+              form.setValue('publicBaseUrl', serverConfig.publicBaseUrl);
+            }
+          }
         }
-        if (config.jellyseerrApiKey) {
-          form.setValue('jellyseerrApiKey', config.jellyseerrApiKey);
-        }
-        if (config.publicBaseUrl) {
-          form.setValue('publicBaseUrl', config.publicBaseUrl);
-        }
+      } catch (error) {
+        console.error('Failed to load config:', error);
       }
-    } catch (error) {
-      console.error('Failed to load config from localStorage:', error);
-    }
-  }, [form]);
+    };
+
+    loadConfig();
+  }, [form, accessToken]);
 
   // Save config to localStorage
   const saveConfig = () => {

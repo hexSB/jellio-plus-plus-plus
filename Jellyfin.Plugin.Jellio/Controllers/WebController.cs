@@ -2,6 +2,7 @@ using System;
 using System.Net.Mime;
 using System.Reflection;
 using Jellyfin.Plugin.Jellio.Helpers;
+using Jellyfin.Plugin.Jellio.Models;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Devices;
 using MediaBrowser.Controller.Dto;
@@ -104,6 +105,85 @@ public class WebController : ControllerBase
 
         // LOG: Successfully returned libraries for user in GetServerInfo
         return Ok(new { name = friendlyName, libraries });
+    }
+
+    [HttpGet("get-config")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [Produces(MediaTypeNames.Application.Json)]
+    public IActionResult GetConfig()
+    {
+        // Require authentication
+        var userId = RequestHelpers.GetCurrentUserId(User);
+        if (userId == null)
+        {
+            var token = ExtractTokenFromHeaders(Request);
+            if (!string.IsNullOrEmpty(token))
+            {
+                userId = RequestHelpers.GetUserIdByAuthToken(token!, _deviceManager);
+            }
+        }
+
+        if (userId == null || userId == Guid.Empty)
+        {
+            return Unauthorized();
+        }
+
+        var config = Plugin.Instance?.Configuration;
+        if (config == null)
+        {
+            return Ok(new
+            {
+                jellyseerrEnabled = false,
+                jellyseerrUrl = string.Empty,
+                jellyseerrApiKey = string.Empty,
+                publicBaseUrl = string.Empty
+            });
+        }
+
+        return Ok(new
+        {
+            jellyseerrEnabled = config.JellyseerrEnabled,
+            jellyseerrUrl = config.JellyseerrUrl,
+            jellyseerrApiKey = config.JellyseerrApiKey,
+            publicBaseUrl = config.PublicBaseUrl
+        });
+    }
+
+    [HttpPost("save-config")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [Produces(MediaTypeNames.Application.Json)]
+    public IActionResult SaveConfig([FromBody] SaveConfigRequest request)
+    {
+        // Require authentication
+        var userId = RequestHelpers.GetCurrentUserId(User);
+        if (userId == null)
+        {
+            var token = ExtractTokenFromHeaders(Request);
+            if (!string.IsNullOrEmpty(token))
+            {
+                userId = RequestHelpers.GetUserIdByAuthToken(token!, _deviceManager);
+            }
+        }
+
+        if (userId == null || userId == Guid.Empty)
+        {
+            return Unauthorized();
+        }
+
+        if (Plugin.Instance == null)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Plugin instance not available." });
+        }
+
+        var config = Plugin.Instance.Configuration;
+        config.JellyseerrEnabled = request.JellyseerrEnabled;
+        config.JellyseerrUrl = request.JellyseerrUrl ?? string.Empty;
+        config.JellyseerrApiKey = request.JellyseerrApiKey ?? string.Empty;
+        config.PublicBaseUrl = request.PublicBaseUrl ?? string.Empty;
+
+        Plugin.Instance.SaveConfiguration();
+
+        return Ok(new { success = true });
     }
 
     private static string? ExtractTokenFromHeaders(HttpRequest request)
