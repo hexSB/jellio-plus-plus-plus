@@ -434,7 +434,23 @@ public class AddonController : ControllerBase
 
         if (seriesItems.Count == 0)
         {
-            return NotFound();
+            // Series not found - show Jellyseerr option if enabled
+            if (config.JellyseerrEnabled && !string.IsNullOrWhiteSpace(config.JellyseerrUrl))
+            {
+                var title = await GetTitleFromCinemeta(imdbId, "tv");
+                if (!string.IsNullOrWhiteSpace(title))
+                {
+                    var baseUrl = GetBaseUrl(config.PublicBaseUrl);
+                    var requestUrl = $"{baseUrl}/jellio/{Request.RouteValues["config"]}/jellyseerr?type=tv&imdbId=tt{imdbId}&title={Uri.EscapeDataString(title)}&season={seasonNum}&episode={episodeNum}";
+                    var streams = new[]
+                    {
+                        new { url = requestUrl, name = "📥 Request via Jellyseerr", description = "Click to send request to Jellyseerr" }
+                    };
+                    return Ok(new { streams });
+                }
+            }
+
+            return Ok(new { streams = Array.Empty<object>() });
         }
 
         var seriesIds = seriesItems.Select(s => s.Id).ToArray();
@@ -450,6 +466,7 @@ public class AddonController : ControllerBase
 
         if (episodeItems.Count == 0)
         {
+            // Episode not found - show Jellyseerr option if enabled
             if (config.JellyseerrEnabled && !string.IsNullOrWhiteSpace(config.JellyseerrUrl))
             {
                 var title = await GetTitleFromCinemeta(imdbId, "tv");
