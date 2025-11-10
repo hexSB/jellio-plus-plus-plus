@@ -29,6 +29,8 @@ This fork is updated for **Jellyfin 10.11.2**.
 Jellio+ allows you to instantly stream media from your Jellyfin server through Stremio. Simply search for the media in Stremio, and if it is on your Jellyfin server, it will apear!
 
 
+### Jellyseer Integration
+
 ![Jellyseer Integration](assets/jellyseer-integration.PNG)  
 
 Enable the optional Jellyseer functionality to be able to directly request media to be sent to Jellyseer with a simple in-app solution.
