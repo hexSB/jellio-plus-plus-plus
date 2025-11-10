@@ -68,5 +68,5 @@ No breaking changes. Existing configurations will continue to work. New Jellysee
 Community-maintained fork with Jellyfin 10.11.x support by @InfiniteAvenger
 
 ## 🔗 Links
-- GitHub Repository: https://github.com/InfiniteAvenger/jellio-jellyfin10.11.x
-- Full Changelog: https://github.com/InfiniteAvenger/jellio-jellyfin10.11.x/compare/v1.0.0...v1.1.0
+- GitHub Repository: https://github.com/InfiniteAvenger/jellio-plus
+- Full Changelog: https://github.com/InfiniteAvenger/jellio-plus/compare/v1.0.0...v1.1.0

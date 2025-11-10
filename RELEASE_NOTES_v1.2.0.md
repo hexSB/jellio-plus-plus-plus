@@ -49,4 +49,4 @@ Install from the Jellyfin plugin catalog or manually:
 
 ---
 
-**Full Changelog**: https://github.com/InfiniteAvenger/jellio-jellyfin10.11.x/compare/v1.1.0...v1.2.0
+**Full Changelog**: https://github.com/InfiniteAvenger/jellio-plus/compare/v1.1.0...v1.2.0

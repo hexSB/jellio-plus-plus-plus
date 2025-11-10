@@ -36,7 +36,7 @@
 - **Version**: 1.1.0.0
 - **Target ABI**: 10.11.0.0 (Jellyfin 10.11.x)
 - **Release Date**: January 26, 2025
-- **Download URL**: https://github.com/InfiniteAvenger/jellio-jellyfin10.11.x/releases/download/v1.1.0/jellio_1.1.0.0.zip
+- **Download URL**: https://github.com/InfiniteAvenger/jellio-plus/releases/download/v1.1.0/jellio_1.1.0.0.zip
 
 ### Manifest Entry
 ```json
@@ -44,7 +44,7 @@
     "version": "1.1.0.0",
     "changelog": "Jellio v1.1.0 - Jellyseerr Integration & Configuration Management. Major features: Automatic media requests via Jellyseerr when streams are unavailable, dual configuration persistence (localStorage + server-side), request deduplication with race-condition protection, enhanced configuration UI with save button, support for both movies and TV shows, smart TMDB search integration.",
     "targetAbi": "10.11.0.0",
-    "sourceUrl": "https://github.com/InfiniteAvenger/jellio-jellyfin10.11.x/releases/download/v1.1.0/jellio_1.1.0.0.zip",
+    "sourceUrl": "https://github.com/InfiniteAvenger/jellio-plus/releases/download/v1.1.0/jellio_1.1.0.0.zip",
     "checksum": "34e6ce3ada0f46e5d89d0968b29c78fa",
     "timestamp": "2025-01-26T12:00:00Z"
 }
@@ -55,14 +55,14 @@
 ### To Complete the Release:
 
 1. **Upload Release to GitHub**:
-   - Go to: https://github.com/InfiniteAvenger/jellio-jellyfin10.11.x/releases/new
+   - Go to: https://github.com/InfiniteAvenger/jellio-plus/releases/new
    - Tag: v1.1.0
    - Title: "Jellio v1.1.0 - Jellyseerr Integration & Configuration Management"
    - Upload: jellio_1.1.0.0.zip
    - Description: Copy from CHANGELOG_v1.1.0.md
 
 2. **Verify Manifest**:
-   - Check: https://raw.githubusercontent.com/InfiniteAvenger/jellio-jellyfin10.11.x/metadata/jellyfin-repo-manifest.json
+   - Check: https://raw.githubusercontent.com/InfiniteAvenger/jellio-plus/metadata/jellyfin-repo-manifest.json
    - Should show only v1.1.0 and v1.0.0
 
 3. **Test Installation**:
@@ -106,10 +106,10 @@
 - Implemented proper request deduplication
 
 ## 🔗 Important Links
-- **Repository**: https://github.com/InfiniteAvenger/jellio-jellyfin10.11.x
-- **Releases**: https://github.com/InfiniteAvenger/jellio-jellyfin10.11.x/releases
-- **Manifest**: https://raw.githubusercontent.com/InfiniteAvenger/jellio-jellyfin10.11.x/metadata/jellyfin-repo-manifest.json
-- **Full Changelog**: https://github.com/InfiniteAvenger/jellio-jellyfin10.11.x/compare/v1.0.0...v1.1.0
+- **Repository**: https://github.com/InfiniteAvenger/jellio-plus
+- **Releases**: https://github.com/InfiniteAvenger/jellio-plus/releases
+- **Manifest**: https://raw.githubusercontent.com/InfiniteAvenger/jellio-plus/metadata/jellyfin-repo-manifest.json
+- **Full Changelog**: https://github.com/InfiniteAvenger/jellio-plus/compare/v1.0.0...v1.1.0
 
 ## 📝 Notes
 - All old version tags (v1.0.1 - v1.1.14) have been removed from both local and remote
