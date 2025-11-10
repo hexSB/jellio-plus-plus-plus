@@ -35,7 +35,7 @@ Enable the optional Jellyseer functionality to be able to directly request media
 ![Jellyseer Integration](assets/jellyseer-integration.PNG)  
 
 
-### Installation-
+### Installation:
 
 1. Go Open Jellyfin Dashboard > Plugins > Manage Repositories
 2. Click "New Repository" and add "Jellio" for the name, and "https://raw.githubusercontent.com/InfiniteAvenger/jellio-plus/metadata/jellyfin-repo-manifest.json" for the repository url
