@@ -24,10 +24,9 @@ This fork is updated for **Jellyfin 10.11.2**.
 
 ### Browsing Your Library in Stremio
 
-![Jellio Streaming in Stremio](assets/jellio-stream.PNG)
-
 Jellio+ allows you to instantly stream media from your Jellyfin server through Stremio. Simply search for the media in Stremio, and if it is on your Jellyfin server, it will apear!
 
+![Jellio Streaming in Stremio](assets/jellio-stream.PNG)
 
 ### Jellyseer Integration
 
