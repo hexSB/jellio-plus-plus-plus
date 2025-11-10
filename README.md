@@ -5,6 +5,10 @@ This fork is updated for **Jellyfin 10.11.2**.
 
 All credit for the original work goes to Vanchaxy. This version includes small updates to keep the plugin working with the latest Jellyfin release.
 
+## Features:
+
+Stream your Jellyfin content through Stremio! Now compatible with the latest version of Jellyfin.
+
 ---
 
 ## Install
