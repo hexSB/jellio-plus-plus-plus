@@ -43,14 +43,13 @@ export const JellyseerrFieldset: FC<Props> = ({ form }) => {
             control={form.control}
             name="jellyseerrUrl"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex flex-col">
                 <FormLabel>Jellyseerr Base URL</FormLabel>
                 <FormControl>
                   <Input placeholder="https://jellyseerr.example.com" {...field} />
                 </FormControl>
-                <FormDescription className="text-xs">
-                  <strong>Use your public/Cloudflare Tunnel URL</strong> (accessible from anywhere).
-                  Do NOT include a trailing slash. Example: <code className="text-xs bg-muted px-1 rounded">https://jellyseerr.example.com</code>
+                <FormDescription className="text-xs min-h-[2.5rem]">
+                  <strong>Use your local address. Do not include a trailing slash. (ex. "http://192.168.0.105:5055")</strong>
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -60,12 +59,12 @@ export const JellyseerrFieldset: FC<Props> = ({ form }) => {
             control={form.control}
             name="jellyseerrApiKey"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex flex-col">
                 <FormLabel>Jellyseerr API Key</FormLabel>
                 <FormControl>
                   <Input type="password" placeholder="paste API key" {...field} />
                 </FormControl>
-                <FormDescription>Required for automatic API requests.</FormDescription>
+                <FormDescription className="text-xs min-h-[2.5rem]">Required for automatic API requests.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -75,13 +74,12 @@ export const JellyseerrFieldset: FC<Props> = ({ form }) => {
             name="publicBaseUrl"
             render={({ field }) => (
               <FormItem className="md:col-span-2">
-                <FormLabel>Public Base URL (optional)</FormLabel>
+                <FormLabel>Public Base URL</FormLabel>
                 <FormControl>
                   <Input placeholder="https://jellyfin.example.com" {...field} />
                 </FormControl>
                 <FormDescription className="text-xs">
-                  <strong>Use your Cloudflare Tunnel or public URL</strong> for Jellyfin if different from where you're accessing this page.
-                  Do NOT include a trailing slash. Example: <code className="text-xs bg-muted px-1 rounded">https://jellyfin.example.com</code>
+                  <strong>Use your Cloudflare Tunnel address to access Jellyfin when not on your local network. (ex. "https://jellyfin.example.com")</strong>
                 </FormDescription>
                 <FormMessage />
               </FormItem>
