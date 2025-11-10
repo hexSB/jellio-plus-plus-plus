@@ -30,9 +30,9 @@ Jellio+ allows you to instantly stream media from your Jellyfin server through S
 
 ### Jellyseer Integration
 
-![Jellyseer Integration](assets/jellyseer-integration.PNG)  
-
 Enable the optional Jellyseer functionality to be able to directly request media to be sent to Jellyseer with a simple in-app solution.
+
+![Jellyseer Integration](assets/jellyseer-integration.PNG)  
 
 
 ### Installation-
