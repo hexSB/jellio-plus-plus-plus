@@ -37,25 +37,12 @@ Enable the optional Jellyseer functionality to be able to directly request media
 
 ### Installation-
 
-
-
-**Method 1: Repository Installation (Recommended)**- 🔐 **Secure Access** - Respects Jellyfin user permissions and authenticationJellio+ is a modern fork of [Vanchaxy's original Jellio plugin](https://github.com/vanchaxy/jellio), updated and enhanced for **Jellyfin 10.11.x** compatibility. This plugin creates a bridge between your Jellyfin media server and Stremio, allowing you to stream your personal media library directly within the Stremio interface.## Install
-
-
-
-1. Open Jellyfin Dashboard > **Plugins** > **Repositories**- 🎨 **Rich Metadata** - Displays posters, descriptions, ratings, and cast information
-
-2. Add the repository URL:
-
-   ```- 📺 **Multiple Formats** - Supports various video codecs and quality options
-
-   https://raw.githubusercontent.com/InfiniteAvenger/jellio-plus/metadata/jellyfin-repo-manifest.json
-
-   ```
-
-3. Navigate to **Plugins** > **Catalog**
-
-4. Search for "Jellio" and click **Install**## 🖼️ Screenshots## ✨ Features**Option 1: From Repository**
-
-5. Restart your Jellyfin server
-
+1. Go Open Jellyfin Dashboard > Plugins > Manage Repositories
+2. Click "New Repository" and add "Jellio" for the name, and "https://raw.githubusercontent.com/InfiniteAvenger/jellio-jellyfin10.11.x/metadata/jellyfin-repo-manifest.json" for the repository url
+3. Go back to Plugins, and under "All" find and install Jellio
+4. Restart Jellyfin
+5. Jellyfin Dashboard > Plugins > Installed > Jellio and then click "Settings"
+6. Select which libraries you want to be included in Stremio
+7. (Optional) Input your local Jellyseer url (ex. http://192.168.0.105:5055" and your Jellyseer API key. Also include your Public URL for Jellyfin (ex. https://jellyfin.yourserver.com)
+8. Click "Save Configuration for Jellyfin"
+9. Lastly, click "Install." Copy that link and paste it in your Stremio addons. You're all done!
