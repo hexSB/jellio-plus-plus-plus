@@ -137,7 +137,7 @@ public class AddonController : ControllerBase
         return meta;
     }
 
-    private OkObjectResult GetStreamsResult(Guid userId, IReadOnlyList<BaseItem> items)
+    private OkObjectResult GetStreamsResult(Guid userId, IReadOnlyList<BaseItem> items, string authToken)
     {
         var user = _userManager.GetUserById(userId);
         if (user == null)
@@ -145,13 +145,13 @@ public class AddonController : ControllerBase
             return Ok(new { streams = Array.Empty<object>() });
         }
 
-    var baseUrl = GetBaseUrl();
+        var baseUrl = GetBaseUrl();
         var dtoOptions = new DtoOptions(true);
         var dtos = _dtoService.GetBaseItemDtos(items, dtoOptions, user);
         var streams = dtos.SelectMany(dto =>
             dto.MediaSources.Select(source => new StreamDto
             {
-                Url = $"{baseUrl}/videos/{dto.Id}/stream?mediaSourceId={source.Id}&static=true",
+                Url = $"{baseUrl}/videos/{dto.Id}/stream?mediaSourceId={source.Id}&static=true&api_key={Uri.EscapeDataString(authToken)}",
                 Name = "Jellio",
                 Description = source.Name,
             })
@@ -361,7 +361,7 @@ public class AddonController : ControllerBase
             return Ok(new { streams = Array.Empty<object>() });
         }
 
-        return GetStreamsResult(userId, [item]);
+        return GetStreamsResult(userId, [item], config.AuthToken);
     }
 
     [HttpGet("stream/movie/tt{imdbId}.json")]
@@ -406,7 +406,7 @@ public class AddonController : ControllerBase
             return Ok(new { streams = Array.Empty<object>() });
         }
 
-        return GetStreamsResult(userId, items);
+        return GetStreamsResult(userId, items, config.AuthToken);
     }
 
     [HttpGet("stream/series/tt{imdbId}:{seasonNum:int}:{episodeNum:int}.json")]
