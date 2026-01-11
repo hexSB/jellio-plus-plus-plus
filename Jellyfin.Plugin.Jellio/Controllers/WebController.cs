@@ -7,6 +7,7 @@ using MediaBrowser.Controller;
 using MediaBrowser.Controller.Devices;
 using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Dto; // BaseItemDto
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -22,6 +23,7 @@ public class WebController : ControllerBase
     private readonly IDtoService _dtoService;
     private readonly IServerApplicationHost _serverApplicationHost;
     private readonly IDeviceManager _deviceManager;
+    private readonly ISessionManager _sessionManager;
     private readonly Assembly _executingAssembly = Assembly.GetExecutingAssembly();
 
     public WebController(
@@ -29,7 +31,8 @@ public class WebController : ControllerBase
         IUserViewManager userViewManager,
         IDtoService dtoService,
         IServerApplicationHost serverApplicationHost,
-        IDeviceManager deviceManager
+        IDeviceManager deviceManager,
+        ISessionManager sessionManager
     )
     {
         _userManager = userManager;
@@ -37,6 +40,7 @@ public class WebController : ControllerBase
         _dtoService = dtoService;
         _serverApplicationHost = serverApplicationHost;
         _deviceManager = deviceManager;
+        _sessionManager = sessionManager;
     }
 
     [HttpGet]
@@ -70,7 +74,7 @@ public class WebController : ControllerBase
             var token = ExtractTokenFromHeaders(Request);
             if (!string.IsNullOrEmpty(token))
             {
-                userId = RequestHelpers.GetUserIdByAuthToken(token!, _deviceManager);
+                userId = RequestHelpers.GetUserIdByAuthToken(token!, _deviceManager, _sessionManager);
             }
         }
 
@@ -119,7 +123,7 @@ public class WebController : ControllerBase
             var token = ExtractTokenFromHeaders(Request);
             if (!string.IsNullOrEmpty(token))
             {
-                userId = RequestHelpers.GetUserIdByAuthToken(token!, _deviceManager);
+                userId = RequestHelpers.GetUserIdByAuthToken(token!, _deviceManager, _sessionManager);
             }
         }
 
@@ -161,7 +165,7 @@ public class WebController : ControllerBase
             var token = ExtractTokenFromHeaders(Request);
             if (!string.IsNullOrEmpty(token))
             {
-                userId = RequestHelpers.GetUserIdByAuthToken(token!, _deviceManager);
+                userId = RequestHelpers.GetUserIdByAuthToken(token!, _deviceManager, _sessionManager);
             }
         }
 
