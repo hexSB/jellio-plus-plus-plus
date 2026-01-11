@@ -485,6 +485,6 @@ public class AddonController : ControllerBase
             return Ok(new { streams = Array.Empty<object>() });
         }
 
-        return GetStreamsResult(userId, episodeItems);
+        return GetStreamsResult(userId, episodeItems, config.AuthToken);
     }
 }
