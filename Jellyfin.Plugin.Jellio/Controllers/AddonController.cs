@@ -1,4 +1,4 @@
-using System;
+1using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -151,7 +151,7 @@ public class AddonController : ControllerBase
         var streams = dtos.SelectMany(dto =>
             dto.MediaSources.Select(source => new StreamDto
             {
-                Url = $"{baseUrl}/videos/{dto.Id}/stream?mediaSourceId={source.Id}&static=true&api_key={Uri.EscapeDataString(authToken)}",
+                Url = $"{baseUrl}/videos/{dto.Id}/stream?mediaSourceId={source.Id}&api_key={Uri.EscapeDataString(authToken)}",
                 Name = "Jellio",
                 Description = source.Name,
             })
