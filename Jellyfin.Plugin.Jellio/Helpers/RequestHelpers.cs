@@ -48,7 +48,7 @@ public static class RequestHelpers
         var allDevices = deviceManager.GetDevices(new DeviceQuery { Limit = 1000 }).Items;
         foreach (var device in allDevices)
         {
-            if (device.AccessToken != null && 
+            if (device.AccessToken != null &&
                 device.AccessToken.Equals(authToken, StringComparison.OrdinalIgnoreCase))
             {
                 return device.UserId;

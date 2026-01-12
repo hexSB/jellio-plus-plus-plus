@@ -146,17 +146,21 @@ public class AddonController : ControllerBase
             return Ok(new { streams = Array.Empty<object>() });
         }
 
-        LogBuffer.AddLog($"[Stream] Processing {items.Count} item(s) for user {user.Name}", LogLevel.Info);
+        LogBuffer.AddLog($"[Stream] Processing {items.Count} item(s) for user {user.Username}", LogLevel.Info);
         var baseUrl = GetBaseUrl();
         LogBuffer.AddLog($"[Stream] Base URL: {baseUrl}", LogLevel.Info);
         var dtoOptions = new DtoOptions(true);
         var dtos = _dtoService.GetBaseItemDtos(items, dtoOptions, user);
-        LogBuffer.AddLog($"[Stream] Got {dtos.Count()} DTO(s)", LogLevel.Info);
-        
+        LogBuffer.AddLog($"[Stream] Got {dtos.Count} DTO(s)", LogLevel.Info);
+
         var streams = dtos.SelectMany(dto =>
         {
             LogBuffer.AddLog($"[Stream] Processing DTO: {dto.Name} (Id: {dto.Id}, MediaSources: {dto.MediaSources?.Count ?? 0})", LogLevel.Info);
-            return dto.MediaSources?.Select(source =>
+            if (dto.MediaSources == null)
+            {
+                return Enumerable.Empty<StreamDto>();
+            }
+            return dto.MediaSources.Select(source =>
             {
                 var streamUrl = $"{baseUrl}/videos/{dto.Id}/stream?mediaSourceId={source.Id}&api_key={Uri.EscapeDataString(authToken)}&AudioCodec=aac&TranscodingMaxAudioChannels=2&CopyTimestamps=true";
                 LogBuffer.AddLog($"[Stream] Generated stream for {dto.Name} ({dto.Id}): {source.Name} - URL: {streamUrl}", LogLevel.Info);
@@ -166,7 +170,7 @@ public class AddonController : ControllerBase
                     Name = "Jellio",
                     Description = source.Name,
                 };
-            }) ?? Enumerable.Empty<StreamDto>();
+            });
         }).ToList();
         
         LogBuffer.AddLog($"[Stream] Returning {streams.Count} stream(s)", LogLevel.Info);

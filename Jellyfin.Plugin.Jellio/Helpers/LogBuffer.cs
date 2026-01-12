@@ -7,8 +7,8 @@ namespace Jellyfin.Plugin.Jellio.Helpers;
 
 public static class LogBuffer
 {
-    private static readonly ConcurrentQueue<LogEntry> _logs = new();
     private const int _maxLogs = 500;
+    private static readonly ConcurrentQueue<LogEntry> _logs = new();
 
     public static void AddLog(string message, LogLevel level = LogLevel.Info)
     {
@@ -35,6 +35,7 @@ public static class LogBuffer
         {
             logs = logs.TakeLast(limit.Value).ToList();
         }
+
         return logs;
     }
 
