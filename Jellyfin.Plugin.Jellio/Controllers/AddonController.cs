@@ -158,7 +158,7 @@ public class AddonController : ControllerBase
             int mediaSourceCount = 0;
             if (dto.MediaSources != null)
             {
-                mediaSourceCount = dto.MediaSources.Count;
+                mediaSourceCount = dto.MediaSources.Count();
             }
 
             LogBuffer.AddLog($"[Stream] Processing DTO: {dto.Name} (Id: {dto.Id}, MediaSources: {mediaSourceCount})", LogLevel.Info);

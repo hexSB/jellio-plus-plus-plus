@@ -8,5 +8,3 @@ public class LogEntry
     public string Message { get; set; } = string.Empty;
     public LogLevel Level { get; set; }
 }
-
-
