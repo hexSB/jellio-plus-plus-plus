@@ -27,7 +27,7 @@ public class RequestController : ControllerBase
     {
         var cacheKey = $"{userId}:{identifier}:{type}";
         var lockObj = _requestLocks.GetOrAdd(cacheKey, _ => new object());
-        
+
         lock (lockObj)
         {
             if (_requestCache.TryGetValue(cacheKey, out var timestamp))
@@ -40,7 +40,7 @@ public class RequestController : ControllerBase
                     return false; // Already requested
                 }
             }
-            
+
             // Mark as being processed NOW
             _requestCache[cacheKey] = DateTime.UtcNow;
             return true; // OK to process
@@ -88,7 +88,7 @@ public class RequestController : ControllerBase
             var requestMsg = $"[Jellyseerr] Request received: type={type}, tmdbId={tmdbId}, imdbId={imdbId}, title={title}";
             Console.WriteLine(requestMsg);
             LogBuffer.AddLog(requestMsg, LogLevel.Info);
-            
+
             if (config is null)
             {
                 var errorMsg = "[Jellyseerr] ERROR: Config is null";
@@ -143,7 +143,7 @@ public class RequestController : ControllerBase
                 var searchUri = $"api/v1/search?query={Uri.EscapeDataString(title!)}";
                 using var resp = await client.GetAsync(searchUri);
                 Console.WriteLine($"[Jellyseerr] Search response status: {resp.StatusCode}");
-                
+
                 if (resp.IsSuccessStatusCode)
                 {
                     using var doc = JsonDocument.Parse(await resp.Content.ReadAsStreamAsync());
@@ -180,9 +180,9 @@ public class RequestController : ControllerBase
 
             int id = maybeTmdbId.Value;
             Console.WriteLine($"[Jellyseerr] Using TMDB ID: {id}");
-            
+
             bool isTV = string.Equals(type, "tv", StringComparison.OrdinalIgnoreCase);
-            
+
             // Build request body - only include seasons for TV shows
             object body;
             if (isTV)
@@ -193,7 +193,7 @@ public class RequestController : ControllerBase
                     seasons = new[] { season.Value };
                     Console.WriteLine($"[Jellyseerr] Requesting TV season: {season.Value}");
                 }
-                
+
                 body = new
                 {
                     mediaType = "tv",
@@ -214,13 +214,13 @@ public class RequestController : ControllerBase
             Console.WriteLine($"[Jellyseerr] Sending request to Jellyseerr: {config.JellyseerrUrl}/api/v1/request");
             using var createResp = await client.PostAsJsonAsync("api/v1/request", body);
             Console.WriteLine($"[Jellyseerr] Request response status: {createResp.StatusCode}");
-            
+
             if (createResp.IsSuccessStatusCode)
             {
                 Console.WriteLine("[Jellyseerr] ✓ Request successful!");
-                
+
                 // Already marked in cache at the start, no need to mark again
-                
+
                 // Return a simple success message
                 // Stremio will attempt to play this URL, fail gracefully, but the request is already sent
                 return Content("✓ Content request sent to Jellyseerr successfully!", "text/plain");

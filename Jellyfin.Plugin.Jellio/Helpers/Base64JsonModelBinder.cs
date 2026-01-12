@@ -27,7 +27,7 @@ public class Base64JsonModelBinder : IModelBinder
         {
             var json = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(value));
             var result = JsonSerializer.Deserialize<ConfigModel>(json);
-            
+
             // Return success even if deserialization returns null
             bindingContext.Result = ModelBindingResult.Success(result);
             return Task.CompletedTask;

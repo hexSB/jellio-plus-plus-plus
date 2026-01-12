@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mime;
 using System.Reflection;
@@ -187,7 +188,7 @@ public class WebController : ControllerBase
         config.JellyseerrUrl = request.JellyseerrUrl ?? string.Empty;
         config.JellyseerrApiKey = request.JellyseerrApiKey ?? string.Empty;
         config.PublicBaseUrl = request.PublicBaseUrl ?? string.Empty;
-        
+
         // Save selected libraries
         if (request.SelectedLibraries != null)
         {
