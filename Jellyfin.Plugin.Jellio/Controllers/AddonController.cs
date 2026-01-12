@@ -146,22 +146,30 @@ public class AddonController : ControllerBase
             return Ok(new { streams = Array.Empty<object>() });
         }
 
+        LogBuffer.AddLog($"[Stream] Processing {items.Count} item(s) for user {user.Name}", LogLevel.Info);
         var baseUrl = GetBaseUrl();
+        LogBuffer.AddLog($"[Stream] Base URL: {baseUrl}", LogLevel.Info);
         var dtoOptions = new DtoOptions(true);
         var dtos = _dtoService.GetBaseItemDtos(items, dtoOptions, user);
+        LogBuffer.AddLog($"[Stream] Got {dtos.Count()} DTO(s)", LogLevel.Info);
+        
         var streams = dtos.SelectMany(dto =>
-            dto.MediaSources.Select(source =>
+        {
+            LogBuffer.AddLog($"[Stream] Processing DTO: {dto.Name} (Id: {dto.Id}, MediaSources: {dto.MediaSources?.Count ?? 0})", LogLevel.Info);
+            return dto.MediaSources?.Select(source =>
             {
                 var streamUrl = $"{baseUrl}/videos/{dto.Id}/stream?mediaSourceId={source.Id}&api_key={Uri.EscapeDataString(authToken)}&AudioCodec=aac&TranscodingMaxAudioChannels=2&CopyTimestamps=true";
-                LogBuffer.AddLog($"[Stream] Generated stream for {dto.Name} ({dto.Id}): {source.Name}", LogLevel.Info);
+                LogBuffer.AddLog($"[Stream] Generated stream for {dto.Name} ({dto.Id}): {source.Name} - URL: {streamUrl}", LogLevel.Info);
                 return new StreamDto
                 {
                     Url = streamUrl,
                     Name = "Jellio",
                     Description = source.Name,
                 };
-            })
-        );
+            }) ?? Enumerable.Empty<StreamDto>();
+        }).ToList();
+        
+        LogBuffer.AddLog($"[Stream] Returning {streams.Count} stream(s)", LogLevel.Info);
         return Ok(new { streams });
     }
 
@@ -369,7 +377,10 @@ public class AddonController : ControllerBase
             return Ok(new { streams = Array.Empty<object>() });
         }
 
-        return GetStreamsResult(userId, [item], config.AuthToken);
+        LogBuffer.AddLog($"[Stream] Found item: {item.Name} (Type: {item.GetType().Name}, Id: {item.Id})", LogLevel.Info);
+        var result = GetStreamsResult(userId, [item], config.AuthToken);
+        LogBuffer.AddLog($"[Stream] Returning stream result for {item.Name}", LogLevel.Info);
+        return result;
     }
 
     [HttpGet("stream/movie/tt{imdbId}.json")]
@@ -426,10 +437,12 @@ public class AddonController : ControllerBase
     )
     {
         var userId = (Guid)HttpContext.Items["JellioUserId"]!;
+        LogBuffer.AddLog($"[Stream] TV Episode request: IMDB={imdbId}, Season={seasonNum}, Episode={episodeNum}", LogLevel.Info);
 
         var user = _userManager.GetUserById(userId);
         if (user == null)
         {
+            LogBuffer.AddLog($"[Stream] User not found: {userId}", LogLevel.Warning);
             return Unauthorized();
         }
 
@@ -439,9 +452,11 @@ public class AddonController : ControllerBase
             HasAnyProviderId = new Dictionary<string, string> { ["Imdb"] = $"tt{imdbId}" },
         };
         var seriesItems = _libraryManager.GetItemList(seriesQuery);
+        LogBuffer.AddLog($"[Stream] Found {seriesItems.Count} series with IMDB tt{imdbId}", LogLevel.Info);
 
         if (seriesItems.Count == 0)
         {
+            LogBuffer.AddLog($"[Stream] Series not found for IMDB tt{imdbId}", LogLevel.Warning);
             // Series not found - show Jellyseerr option if enabled
             if (config.JellyseerrEnabled && !string.IsNullOrWhiteSpace(config.JellyseerrUrl))
             {
@@ -462,6 +477,7 @@ public class AddonController : ControllerBase
         }
 
         var seriesIds = seriesItems.Select(s => s.Id).ToArray();
+        LogBuffer.AddLog($"[Stream] Series IDs: {string.Join(", ", seriesIds)}", LogLevel.Info);
 
         var episodeQuery = new InternalItemsQuery(user)
         {
@@ -471,9 +487,11 @@ public class AddonController : ControllerBase
             IndexNumber = episodeNum,
         };
         var episodeItems = _libraryManager.GetItemList(episodeQuery);
+        LogBuffer.AddLog($"[Stream] Found {episodeItems.Count} episode(s) for Season {seasonNum}, Episode {episodeNum}", LogLevel.Info);
 
         if (episodeItems.Count == 0)
         {
+            LogBuffer.AddLog($"[Stream] Episode not found: Season {seasonNum}, Episode {episodeNum}", LogLevel.Warning);
             // Episode not found - show Jellyseerr option if enabled
             if (config.JellyseerrEnabled && !string.IsNullOrWhiteSpace(config.JellyseerrUrl))
             {
@@ -493,6 +511,7 @@ public class AddonController : ControllerBase
             return Ok(new { streams = Array.Empty<object>() });
         }
 
+        LogBuffer.AddLog($"[Stream] Returning streams for {episodeItems.Count} episode(s)", LogLevel.Info);
         return GetStreamsResult(userId, episodeItems, config.AuthToken);
     }
 }

@@ -310,7 +310,13 @@ public class WebController : ControllerBase
         }
 
         var logs = LogBuffer.GetLogs(limit ?? 100);
-        return Ok(new { logs });
+        var logDtos = logs.Select(log => new
+        {
+            timestamp = log.Timestamp.ToString("o"), // ISO 8601 format
+            message = log.Message,
+            level = log.Level.ToString()
+        }).ToList();
+        return Ok(new { logs = logDtos });
     }
 
     [HttpPost("logs/clear")]
