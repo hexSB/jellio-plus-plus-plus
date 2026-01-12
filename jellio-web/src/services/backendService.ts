@@ -109,3 +109,56 @@ export const getConfigFromServer = async (
   }
 };
 
+export interface LogEntry {
+  timestamp: string;
+  message: string;
+  level: 'Info' | 'Warning' | 'Error';
+}
+
+export const getLogs = async (
+  token?: string,
+  limit?: number,
+): Promise<LogEntry[]> => {
+  try {
+    const headers: Record<string, string> = {};
+    if (token) {
+      const deviceId = getOrCreateDeviceId();
+      headers['Authorization'] = `MediaBrowser Token="${token}"`;
+      headers['X-Emby-Token'] = token;
+      headers['X-Emby-Authorization'] = `MediaBrowser Client="Jellio", Device="Web", DeviceId="${deviceId}", Version="0.0.0", Token="${token}"`;
+    }
+
+    const params = limit ? { limit } : {};
+    const response = await axios.get(`${getBaseUrl()}/logs`, {
+      headers,
+      params,
+      withCredentials: true,
+    });
+
+    return response.data.logs || [];
+  } catch (error) {
+    console.error('Error getting logs:', error);
+    throw error;
+  }
+};
+
+export const clearLogs = async (token?: string): Promise<void> => {
+  try {
+    const headers: Record<string, string> = {};
+    if (token) {
+      const deviceId = getOrCreateDeviceId();
+      headers['Authorization'] = `MediaBrowser Token="${token}"`;
+      headers['X-Emby-Token'] = token;
+      headers['X-Emby-Authorization'] = `MediaBrowser Client="Jellio", Device="Web", DeviceId="${deviceId}", Version="0.0.0", Token="${token}"`;
+    }
+
+    await axios.post(`${getBaseUrl()}/logs/clear`, null, {
+      headers,
+      withCredentials: true,
+    });
+  } catch (error) {
+    console.error('Error clearing logs:', error);
+    throw error;
+  }
+};
+

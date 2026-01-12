@@ -1,14 +1,7 @@
 import { FC, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText, X, Trash2 } from 'lucide-react';
-import { getBaseUrl, getOrCreateDeviceId } from '@/lib/utils';
-import axios from 'axios';
-
-interface LogEntry {
-  timestamp: string;
-  message: string;
-  level: 'Info' | 'Warning' | 'Error';
-}
+import { getLogs, clearLogs, type LogEntry } from '@/services/backendService';
 
 interface LogsViewerProps {
   accessToken?: string;
@@ -22,21 +15,11 @@ export const LogsViewer: FC<LogsViewerProps> = ({ accessToken }) => {
 
   const fetchLogs = async () => {
     if (!accessToken) return;
-    
+
     setLoading(true);
     try {
-      const headers: Record<string, string> = {};
-      const deviceId = getOrCreateDeviceId();
-      headers['Authorization'] = `MediaBrowser Token="${accessToken}"`;
-      headers['X-Emby-Token'] = accessToken;
-      headers['X-Emby-Authorization'] = `MediaBrowser Client="Jellio", Device="Web", DeviceId="${deviceId}", Version="0.0.0", Token="${accessToken}"`;
-
-      const response = await axios.get(`${getBaseUrl()}/logs?limit=100`, {
-        headers,
-        withCredentials: true,
-      });
-
-      setLogs(response.data.logs || []);
+      const fetchedLogs = await getLogs(accessToken, 100);
+      setLogs(fetchedLogs);
     } catch (error) {
       console.error('Failed to fetch logs:', error);
     } finally {
@@ -44,21 +27,11 @@ export const LogsViewer: FC<LogsViewerProps> = ({ accessToken }) => {
     }
   };
 
-  const clearLogs = async () => {
+  const handleClearLogs = async () => {
     if (!accessToken) return;
-    
+
     try {
-      const headers: Record<string, string> = {};
-      const deviceId = getOrCreateDeviceId();
-      headers['Authorization'] = `MediaBrowser Token="${accessToken}"`;
-      headers['X-Emby-Token'] = accessToken;
-      headers['X-Emby-Authorization'] = `MediaBrowser Client="Jellio", Device="Web", DeviceId="${deviceId}", Version="0.0.0", Token="${accessToken}"`;
-
-      await axios.post(`${getBaseUrl()}/logs/clear`, null, {
-        headers,
-        withCredentials: true,
-      });
-
+      await clearLogs(accessToken);
       setLogs([]);
     } catch (error) {
       console.error('Failed to clear logs:', error);
@@ -138,7 +111,7 @@ export const LogsViewer: FC<LogsViewerProps> = ({ accessToken }) => {
             type="button"
             variant="outline"
             size="sm"
-            onClick={clearLogs}
+            onClick={handleClearLogs}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
