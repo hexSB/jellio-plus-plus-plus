@@ -34,7 +34,9 @@ public class RequestController : ControllerBase
             {
                 if (DateTime.UtcNow - timestamp < _cacheDuration)
                 {
-                    Console.WriteLine($"[Jellyseerr] Skipping duplicate request (cached {(DateTime.UtcNow - timestamp).TotalSeconds:F1}s ago)");
+                    var msg = $"[Jellyseerr] Skipping duplicate request (cached {(DateTime.UtcNow - timestamp).TotalSeconds:F1}s ago)";
+                    Console.WriteLine(msg);
+                    LogBuffer.AddLog(msg, LogLevel.Info);
                     return false; // Already requested
                 }
             }
@@ -55,12 +57,16 @@ public class RequestController : ControllerBase
         if (!string.IsNullOrWhiteSpace(apiKey))
         {
             // API keys from the config are stored in plain text, use directly
-            Console.WriteLine($"[Jellyseerr] Using API key: {apiKey.Substring(0, Math.Min(8, apiKey.Length))}... (length: {apiKey.Length})");
+            var msg = $"[Jellyseerr] Using API key: {apiKey.Substring(0, Math.Min(8, apiKey.Length))}... (length: {apiKey.Length})";
+            Console.WriteLine(msg);
+            LogBuffer.AddLog(msg, LogLevel.Info);
             client.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
         }
         else
         {
-            Console.WriteLine("[Jellyseerr] WARNING: No API key provided!");
+            var msg = "[Jellyseerr] WARNING: No API key provided!";
+            Console.WriteLine(msg);
+            LogBuffer.AddLog(msg, LogLevel.Warning);
         }
 
         return client;
@@ -79,11 +85,15 @@ public class RequestController : ControllerBase
     {
         try
         {
-            Console.WriteLine($"[Jellyseerr] Request received: type={type}, tmdbId={tmdbId}, imdbId={imdbId}, title={title}");
+            var requestMsg = $"[Jellyseerr] Request received: type={type}, tmdbId={tmdbId}, imdbId={imdbId}, title={title}";
+            Console.WriteLine(requestMsg);
+            LogBuffer.AddLog(requestMsg, LogLevel.Info);
             
             if (config is null)
             {
-                Console.WriteLine("[Jellyseerr] ERROR: Config is null");
+                var errorMsg = "[Jellyseerr] ERROR: Config is null";
+                Console.WriteLine(errorMsg);
+                LogBuffer.AddLog(errorMsg, LogLevel.Error);
                 return BadRequest("Invalid or missing configuration.");
             }
 
@@ -91,7 +101,9 @@ public class RequestController : ControllerBase
             var userId = (Guid?)HttpContext.Items["JellioUserId"];
             if (userId == null)
             {
-                Console.WriteLine("[Jellyseerr] ERROR: No user ID in context");
+                var errorMsg = "[Jellyseerr] ERROR: No user ID in context";
+                Console.WriteLine(errorMsg);
+                LogBuffer.AddLog(errorMsg, LogLevel.Error);
                 return Unauthorized();
             }
 
@@ -102,11 +114,15 @@ public class RequestController : ControllerBase
                 return Content("✓ Request already sent (duplicate prevented)", "text/plain");
             }
 
-            Console.WriteLine($"[Jellyseerr] Config loaded: Enabled={config.JellyseerrEnabled}, Url={config.JellyseerrUrl}, HasApiKey={!string.IsNullOrWhiteSpace(config.JellyseerrApiKey)}");
+            var configMsg = $"[Jellyseerr] Config loaded: Enabled={config.JellyseerrEnabled}, Url={config.JellyseerrUrl}, HasApiKey={!string.IsNullOrWhiteSpace(config.JellyseerrApiKey)}";
+            Console.WriteLine(configMsg);
+            LogBuffer.AddLog(configMsg, LogLevel.Info);
 
             if (!config.JellyseerrEnabled || string.IsNullOrWhiteSpace(config.JellyseerrUrl))
             {
-                Console.WriteLine("[Jellyseerr] ERROR: Jellyseerr not configured or disabled");
+                var errorMsg = "[Jellyseerr] ERROR: Jellyseerr not configured or disabled";
+                Console.WriteLine(errorMsg);
+                LogBuffer.AddLog(errorMsg, LogLevel.Error);
                 return BadRequest("Jellyseerr is not configured.");
             }
 
@@ -216,8 +232,12 @@ public class RequestController : ControllerBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[Jellyseerr] EXCEPTION: {ex.Message}");
-            Console.WriteLine($"[Jellyseerr] Stack trace: {ex.StackTrace}");
+            var errorMsg = $"[Jellyseerr] EXCEPTION: {ex.Message}";
+            var stackMsg = $"[Jellyseerr] Stack trace: {ex.StackTrace}";
+            Console.WriteLine(errorMsg);
+            Console.WriteLine(stackMsg);
+            LogBuffer.AddLog(errorMsg, LogLevel.Error);
+            LogBuffer.AddLog(stackMsg, LogLevel.Error);
             return Problem($"Error creating Jellyseerr request: {ex.Message}", statusCode: 500);
         }
     }

@@ -59,6 +59,7 @@ export interface SaveConfigData {
   jellyseerrUrl?: string;
   jellyseerrApiKey?: string;
   publicBaseUrl?: string;
+  selectedLibraries?: string[];
 }
 
 export const saveConfigToServer = async (

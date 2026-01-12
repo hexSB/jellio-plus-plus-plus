@@ -12,7 +12,7 @@ interface StoredConfig {
   publicBaseUrl?: string;
 }
 
-export const useConfigStorage = (form: UseFormReturn<any>, accessToken?: string) => {
+export const useConfigStorage = (form: UseFormReturn<any>, accessToken?: string, availableLibraries?: Array<{ key: string; name: string; type: string }>) => {
   // Load config from localStorage and server on mount
   useEffect(() => {
     const loadConfig = async () => {
@@ -56,6 +56,26 @@ export const useConfigStorage = (form: UseFormReturn<any>, accessToken?: string)
             if (serverConfig.publicBaseUrl) {
               form.setValue('publicBaseUrl', serverConfig.publicBaseUrl);
             }
+            // Load libraries from server config if available
+            if (serverConfig.selectedLibraries && Array.isArray(serverConfig.selectedLibraries) && availableLibraries) {
+              // Convert server library IDs (format: "guidwithoutdashes") to form format
+              // Match them with available libraries
+              const selectedLibraries = serverConfig.selectedLibraries
+                .map((id: string) => {
+                  // Convert "guidwithoutdashes" to "guid-with-dashes" format
+                  let formattedId = id;
+                  if (id.length === 32) {
+                    formattedId = `${id.slice(0, 8)}-${id.slice(8, 12)}-${id.slice(12, 16)}-${id.slice(16, 20)}-${id.slice(20, 32)}`;
+                  }
+                  // Find matching library
+                  return availableLibraries.find(lib => lib.key === formattedId);
+                })
+                .filter((lib): lib is { key: string; name: string; type: string } => lib !== undefined);
+              
+              if (selectedLibraries.length > 0) {
+                form.setValue('libraries', selectedLibraries);
+              }
+            }
           }
         }
       } catch (error) {
@@ -64,7 +84,7 @@ export const useConfigStorage = (form: UseFormReturn<any>, accessToken?: string)
     };
 
     loadConfig();
-  }, [form, accessToken]);
+  }, [form, accessToken, availableLibraries]);
 
   // Save config to localStorage
   const saveConfig = () => {

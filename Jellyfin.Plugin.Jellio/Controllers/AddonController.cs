@@ -142,18 +142,24 @@ public class AddonController : ControllerBase
         var user = _userManager.GetUserById(userId);
         if (user == null)
         {
+            LogBuffer.AddLog($"[Stream] User not found: {userId}", LogLevel.Warning);
             return Ok(new { streams = Array.Empty<object>() });
         }
 
-    var baseUrl = GetBaseUrl();
+        var baseUrl = GetBaseUrl();
         var dtoOptions = new DtoOptions(true);
         var dtos = _dtoService.GetBaseItemDtos(items, dtoOptions, user);
         var streams = dtos.SelectMany(dto =>
-            dto.MediaSources.Select(source => new StreamDto
+            dto.MediaSources.Select(source =>
             {
-                Url = $"{baseUrl}/videos/{dto.Id}/stream?mediaSourceId={source.Id}&api_key={Uri.EscapeDataString(authToken)}",
-                Name = "Jellio",
-                Description = source.Name,
+                var streamUrl = $"{baseUrl}/videos/{dto.Id}/stream?mediaSourceId={source.Id}&api_key={Uri.EscapeDataString(authToken)}&AudioCodec=aac&TranscodingMaxAudioChannels=2&CopyTimestamps=true";
+                LogBuffer.AddLog($"[Stream] Generated stream for {dto.Name} ({dto.Id}): {source.Name}", LogLevel.Info);
+                return new StreamDto
+                {
+                    Url = streamUrl,
+                    Name = "Jellio",
+                    Description = source.Name,
+                };
             })
         );
         return Ok(new { streams });
@@ -352,10 +358,12 @@ public class AddonController : ControllerBase
     )
     {
         var userId = (Guid)HttpContext.Items["JellioUserId"]!;
+        LogBuffer.AddLog($"[Stream] Stream request for {stremioType} with ID: {mediaId}", LogLevel.Info);
 
         var item = _libraryManager.GetItemById<BaseItem>(mediaId, userId);
         if (item == null)
         {
+            LogBuffer.AddLog($"[Stream] Item not found: {mediaId}", LogLevel.Warning);
             // If the item isn't in the library, we can't resolve provider IDs here.
             // Let Stremio fall back to IMDB-based stream routes which include IDs for request flow.
             return Ok(new { streams = Array.Empty<object>() });

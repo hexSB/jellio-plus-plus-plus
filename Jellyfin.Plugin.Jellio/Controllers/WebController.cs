@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net.Mime;
 using System.Reflection;
 using Jellyfin.Plugin.Jellio.Helpers;
@@ -140,7 +141,8 @@ public class WebController : ControllerBase
                 jellyseerrEnabled = false,
                 jellyseerrUrl = string.Empty,
                 jellyseerrApiKey = string.Empty,
-                publicBaseUrl = string.Empty
+                publicBaseUrl = string.Empty,
+                selectedLibraries = Array.Empty<string>()
             });
         }
 
@@ -149,7 +151,8 @@ public class WebController : ControllerBase
             jellyseerrEnabled = config.JellyseerrEnabled,
             jellyseerrUrl = config.JellyseerrUrl,
             jellyseerrApiKey = config.JellyseerrApiKey,
-            publicBaseUrl = config.PublicBaseUrl
+            publicBaseUrl = config.PublicBaseUrl,
+            selectedLibraries = config.SelectedLibraries?.Select(g => g.ToString("N")).ToArray() ?? Array.Empty<string>()
         });
     }
 
@@ -184,6 +187,19 @@ public class WebController : ControllerBase
         config.JellyseerrUrl = request.JellyseerrUrl ?? string.Empty;
         config.JellyseerrApiKey = request.JellyseerrApiKey ?? string.Empty;
         config.PublicBaseUrl = request.PublicBaseUrl ?? string.Empty;
+        
+        // Save selected libraries
+        if (request.SelectedLibraries != null)
+        {
+            config.SelectedLibraries = request.SelectedLibraries
+                .Where(id => Guid.TryParse(id, out _))
+                .Select(id => Guid.Parse(id))
+                .ToList();
+        }
+        else
+        {
+            config.SelectedLibraries = new List<Guid>();
+        }
 
         Plugin.Instance.SaveConfiguration();
 
@@ -269,5 +285,55 @@ public class WebController : ControllerBase
         }
 
         return null;
+    }
+
+    [HttpGet("logs")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [Produces(MediaTypeNames.Application.Json)]
+    public IActionResult GetLogs([FromQuery] int? limit = 100)
+    {
+        // Require authentication
+        var userId = RequestHelpers.GetCurrentUserId(User);
+        if (userId == null)
+        {
+            var token = ExtractTokenFromHeaders(Request);
+            if (!string.IsNullOrEmpty(token))
+            {
+                userId = RequestHelpers.GetUserIdByAuthToken(token!, _deviceManager, _sessionManager);
+            }
+        }
+
+        if (userId == null || userId == Guid.Empty)
+        {
+            return Unauthorized();
+        }
+
+        var logs = LogBuffer.GetLogs(limit ?? 100);
+        return Ok(new { logs });
+    }
+
+    [HttpPost("logs/clear")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [Produces(MediaTypeNames.Application.Json)]
+    public IActionResult ClearLogs()
+    {
+        // Require authentication
+        var userId = RequestHelpers.GetCurrentUserId(User);
+        if (userId == null)
+        {
+            var token = ExtractTokenFromHeaders(Request);
+            if (!string.IsNullOrEmpty(token))
+            {
+                userId = RequestHelpers.GetUserIdByAuthToken(token!, _deviceManager, _sessionManager);
+            }
+        }
+
+        if (userId == null || userId == Guid.Empty)
+        {
+            return Unauthorized();
+        }
+
+        LogBuffer.Clear();
+        return Ok(new { success = true });
     }
 }

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using MediaBrowser.Model.Plugins;
 
 namespace Jellyfin.Plugin.Jellio.Configuration;
@@ -8,4 +10,5 @@ public class PluginConfiguration : BasePluginConfiguration
     public string JellyseerrUrl { get; set; } = string.Empty;
     public string JellyseerrApiKey { get; set; } = string.Empty;
     public string PublicBaseUrl { get; set; } = string.Empty;
+    public List<Guid> SelectedLibraries { get; set; } = new();
 }

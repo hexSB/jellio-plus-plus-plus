@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import { LibrariesField, ServerNameField, JellyseerrFieldset } from '@/components/configForm/fields';
 import { formSchema } from '@/components/configForm/formSchema.tsx';
 import { Button } from '@/components/ui/button.tsx';
+import { LogsViewer } from '@/components/logsViewer';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -41,7 +42,7 @@ const ConfigForm: FC<Props> = ({ serverInfo }) => {
   });
 
   // Load and save config to localStorage and server
-  const { saveConfig } = useConfigStorage(form, serverInfo.accessToken);
+  const { saveConfig } = useConfigStorage(form, serverInfo.accessToken, serverInfo.libraries);
 
   const serverName = form.watch('serverName');
 
@@ -66,6 +67,7 @@ const ConfigForm: FC<Props> = ({ serverInfo }) => {
           jellyseerrUrl: stripTrailingSlash(values.jellyseerrUrl ?? ''),
           jellyseerrApiKey: values.jellyseerrApiKey ?? '',
           publicBaseUrl: stripTrailingSlash(values.publicBaseUrl ?? ''),
+          selectedLibraries: values.libraries?.map((lib: { key: string }) => lib.key.replace(/-/g, '')) ?? [],
         },
         serverInfo.accessToken,
       );
@@ -129,6 +131,7 @@ const ConfigForm: FC<Props> = ({ serverInfo }) => {
         />
         <JellyseerrFieldset form={form} />
         <div className="flex flex-col items-center justify-center gap-2 p-3">
+          <LogsViewer accessToken={serverInfo.accessToken} />
           <Button
             type="button"
             variant="outline"
