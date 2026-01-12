@@ -155,7 +155,7 @@ public class AddonController : ControllerBase
 
         var streams = dtos.SelectMany(dto =>
         {
-            var mediaSourceCount = dto.MediaSources?.Count ?? 0;
+            var mediaSourceCount = dto.MediaSources != null ? dto.MediaSources.Count : 0;
             LogBuffer.AddLog($"[Stream] Processing DTO: {dto.Name} (Id: {dto.Id}, MediaSources: {mediaSourceCount})", LogLevel.Info);
             if (dto.MediaSources == null)
             {

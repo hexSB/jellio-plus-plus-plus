@@ -9,3 +9,4 @@ public class LogEntry
     public LogLevel Level { get; set; }
 }
 
+
