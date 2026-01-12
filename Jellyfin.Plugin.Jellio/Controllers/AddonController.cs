@@ -155,11 +155,13 @@ public class AddonController : ControllerBase
 
         var streams = dtos.SelectMany(dto =>
         {
-            LogBuffer.AddLog($"[Stream] Processing DTO: {dto.Name} (Id: {dto.Id}, MediaSources: {dto.MediaSources?.Count ?? 0})", LogLevel.Info);
+            var mediaSourceCount = dto.MediaSources?.Count ?? 0;
+            LogBuffer.AddLog($"[Stream] Processing DTO: {dto.Name} (Id: {dto.Id}, MediaSources: {mediaSourceCount})", LogLevel.Info);
             if (dto.MediaSources == null)
             {
                 return Enumerable.Empty<StreamDto>();
             }
+
             return dto.MediaSources.Select(source =>
             {
                 var streamUrl = $"{baseUrl}/videos/{dto.Id}/stream?mediaSourceId={source.Id}&api_key={Uri.EscapeDataString(authToken)}&AudioCodec=aac&TranscodingMaxAudioChannels=2&CopyTimestamps=true";
@@ -172,7 +174,7 @@ public class AddonController : ControllerBase
                 };
             });
         }).ToList();
-        
+
         LogBuffer.AddLog($"[Stream] Returning {streams.Count} stream(s)", LogLevel.Info);
         return Ok(new { streams });
     }
