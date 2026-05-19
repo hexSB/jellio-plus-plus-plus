@@ -18,6 +18,7 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Querying;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Jellyfin.Plugin.Jellio.Controllers;
@@ -174,7 +175,26 @@ public class AddonController : ControllerBase
 
             return dto.MediaSources.Select(source =>
             {
-                var streamUrl = $"{baseUrl}/videos/{dto.Id}/stream?mediaSourceId={source.Id}&api_key={Uri.EscapeDataString(authToken)}&AudioCodec=aac&TranscodingMaxAudioChannels=2&CopyTimestamps=true";
+                /*
+                 * Jellyfin's HLS endpoint requires the caller to declare which codecs the player supports.
+                 * It compares these against the media file's codecs to decide whether to pass through without re-encoding or transcode.
+                 *
+                 * Stremio's addon protocol has no mechanism for the client to advertise its codec capabilities to addons, so we hardcode them here. The lists below reflect what Stremio's players can decode. This is the same pattern every Jellyfin client follows - e.g. jellyfin-web builds its codec list.
+                 * See: https://github.com/jellyfin/jellyfin-web/blob/285196329/src/scripts/browserDeviceProfile.js#L914-L925
+                 *
+                 * Without these params Jellyfin would fall back to "m3u8" as the audio codec name, producing invalid FFmpeg commands.
+                 * See: https://github.com/jellyfin/jellyfin/issues/12926
+                 */
+                string[] videoCodecs = ["h264", "hevc", "av1"];
+                string[] audioCodecs = ["aac", "mp3", "ac3", "eac3", "flac", "opus"];
+                var query = QueryString.Create(new Dictionary<string, string?>
+                {
+                    ["mediaSourceId"] = source.Id,
+                    ["api_key"] = authToken,
+                    ["videoCodec"] = string.Join(',', videoCodecs),
+                    ["audioCodec"] = string.Join(',', audioCodecs),
+                });
+                var streamUrl = $"{baseUrl}/Videos/{dto.Id}/master.m3u8{query}";
                 LogBuffer.AddLog($"[Stream] Generated stream for {dto.Name} ({dto.Id}): {source.Name} - URL: {streamUrl}", LogLevel.Info);
                 return new StreamDto
                 {
@@ -186,6 +206,7 @@ public class AddonController : ControllerBase
                         Filename = string.IsNullOrEmpty(source.Path) ? null : Path.GetFileName(source.Path),
                         VideoSize = source.Size,
                         VideoHash = OpenSubtitlesHash.ComputeFromPath(source.Path),
+                        NotWebReady = true,
                     },
                 };
             });
@@ -318,7 +339,7 @@ public class AddonController : ControllerBase
         };
         var result = folder.GetItems(query);
         var dtos = _dtoService.GetBaseItemDtos(result.Items, dtoOptions, user);
-    var baseUrl = GetBaseUrl(config.PublicBaseUrl);
+        var baseUrl = GetBaseUrl(config.PublicBaseUrl);
         var metas = dtos.Select(dto => MapToMeta(dto, stremioType, baseUrl));
 
         return Ok(new { metas });
