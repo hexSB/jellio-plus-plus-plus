@@ -25,7 +25,7 @@ namespace Jellyfin.Plugin.Jellio.Controllers;
 
 [ApiController]
 [ConfigAuthorize]
-[Route("jellio/{config}")]
+[Route("jelliopp/{config}")]
 [Produces(MediaTypeNames.Application.Json)]
 public class AddonController : ControllerBase
 {
@@ -113,7 +113,7 @@ public class AddonController : ControllerBase
 
         var meta = new MetaDto
         {
-            Id = dto.ProviderIds.TryGetValue("Imdb", out var idVal) ? idVal : $"jellio:{dto.Id}",
+            Id = dto.ProviderIds.TryGetValue("Imdb", out var idVal) ? idVal : $"jelliopp:{dto.Id}",
             Type = stremioType.ToString().ToLower(CultureInfo.InvariantCulture),
             Name = dto.Name,
             Poster = $"{baseUrl}/Items/{dto.Id}/Images/Primary",
@@ -199,7 +199,7 @@ public class AddonController : ControllerBase
                 return new StreamDto
                 {
                     Url = streamUrl,
-                    Name = "Jellio",
+                    Name = "Jellio++",
                     Description = source.Name,
                     BehaviorHints = new BehaviorHintsDto
                     {
@@ -252,9 +252,9 @@ public class AddonController : ControllerBase
         var descriptionText = $"Play movies and series from {config.ServerName}: {string.Join(", ", catalogNames)}";
         var manifest = new
         {
-            id = "com.stremio.jellio",
+            id = "com.stremio.jelliopp",
             version = PluginVersion,
-            name = "Jellio",
+            name = "Jellio++",
             description = descriptionText,
             resources = new object[]
             {
@@ -264,11 +264,11 @@ public class AddonController : ControllerBase
                 {
                     name = "meta",
                     types = new[] { "movie", "series" },
-                    idPrefixes = new[] { "jellio" },
+                    idPrefixes = new[] { "jelliopp" },
                 },
             },
             types = new[] { "movie", "series" },
-            idPrefixes = new[] { "tt", "jellio" },
+            idPrefixes = new[] { "tt", "jelliopp" },
             contactEmail = "support@jellio.stream",
             behaviorHints = new { configurable = true },
             catalogs,
@@ -345,7 +345,7 @@ public class AddonController : ControllerBase
         return Ok(new { metas });
     }
 
-    [HttpGet("meta/{stremioType}/jellio:{mediaId:guid}.json")]
+    [HttpGet("meta/{stremioType}/jelliopp:{mediaId:guid}.json")]
     public IActionResult GetMeta(
         [ConfigFromBase64Json] ConfigModel config,
         StremioType stremioType,
@@ -386,7 +386,7 @@ public class AddonController : ControllerBase
             var dtos = _dtoService.GetBaseItemDtos(episodes, seriesItemOptions, user);
             var videos = dtos.Select(episode => new VideoDto
             {
-                Id = $"jellio:{episode.Id}",
+                Id = $"jelliopp:{episode.Id}",
                 Title = episode.Name,
                 Thumbnail = $"{baseUrl}/Items/{episode.Id}/Images/Primary",
                 Available = true,
@@ -401,7 +401,7 @@ public class AddonController : ControllerBase
         return Ok(new { meta });
     }
 
-    [HttpGet("stream/{stremioType}/jellio:{mediaId:guid}.json")]
+    [HttpGet("stream/{stremioType}/jelliopp:{mediaId:guid}.json")]
     public IActionResult GetStream(
         [ConfigFromBase64Json] ConfigModel config,
         StremioType stremioType,
@@ -456,7 +456,7 @@ public class AddonController : ControllerBase
                 if (!string.IsNullOrWhiteSpace(title))
                 {
                     var baseUrl = GetBaseUrl(config.PublicBaseUrl);
-                    var requestUrl = $"{baseUrl}/jellio/{Request.RouteValues["config"]}/jellyseerr?type=movie&imdbId=tt{imdbId}&title={Uri.EscapeDataString(title)}";
+                    var requestUrl = $"{baseUrl}/jelliopp/{Request.RouteValues["config"]}/jellyseerr?type=movie&imdbId=tt{imdbId}&title={Uri.EscapeDataString(title)}";
                     var streams = new[]
                     {
                         new { url = requestUrl, name = "📥 Request via Jellyseerr", description = "Click to send request to Jellyseerr" }
@@ -507,7 +507,7 @@ public class AddonController : ControllerBase
                 if (!string.IsNullOrWhiteSpace(title))
                 {
                     var baseUrl = GetBaseUrl(config.PublicBaseUrl);
-                    var requestUrl = $"{baseUrl}/jellio/{Request.RouteValues["config"]}/jellyseerr?type=tv&imdbId=tt{imdbId}&title={Uri.EscapeDataString(title)}&season={seasonNum}&episode={episodeNum}";
+                    var requestUrl = $"{baseUrl}/jelliopp/{Request.RouteValues["config"]}/jellyseerr?type=tv&imdbId=tt{imdbId}&title={Uri.EscapeDataString(title)}&season={seasonNum}&episode={episodeNum}";
                     var streams = new[]
                     {
                         new { url = requestUrl, name = "📥 Request via Jellyseerr", description = "Click to send request to Jellyseerr" }
@@ -542,7 +542,7 @@ public class AddonController : ControllerBase
                 if (!string.IsNullOrWhiteSpace(title))
                 {
                     var baseUrl = GetBaseUrl(config.PublicBaseUrl);
-                    var requestUrl = $"{baseUrl}/jellio/{Request.RouteValues["config"]}/jellyseerr?type=tv&imdbId=tt{imdbId}&title={Uri.EscapeDataString(title)}&season={seasonNum}&episode={episodeNum}";
+                    var requestUrl = $"{baseUrl}/jelliopp/{Request.RouteValues["config"]}/jellyseerr?type=tv&imdbId=tt{imdbId}&title={Uri.EscapeDataString(title)}&season={seasonNum}&episode={episodeNum}";
                     var streams = new[]
                     {
                         new { url = requestUrl, name = "📥 Request via Jellyseerr", description = "Click to send request to Jellyseerr" }
