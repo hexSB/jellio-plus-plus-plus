@@ -1,0 +1,11 @@
+[
+    {
+        "guid": "e874be83-fe36-4568-abac-f5ce0574b409",
+        "name": "Jellio++",
+        "description": "This plugin provides integration between Jellyfin and the Jellio++ service.\nFork of InfiniteAvenger/jellio-plus.\n",
+        "overview": "Integrates Jellio++ features with Jellyfin.",
+        "owner": "wujekbogdan",
+        "category": "General",
+        "versions": []
+    }
+]
