@@ -137,7 +137,7 @@ public class AddonController : ControllerBase
         return meta;
     }
 
-    private OkObjectResult GetStreamsResult(Guid userId, IReadOnlyList<BaseItem> items, string authToken)
+    private OkObjectResult GetStreamsResult(Guid userId, IReadOnlyList<BaseItem> items, string authToken, string? publicBaseUrl = null)
     {
         var user = _userManager.GetUserById(userId);
         if (user == null)
@@ -147,7 +147,7 @@ public class AddonController : ControllerBase
         }
 
         LogBuffer.AddLog($"[Stream] Processing {items.Count} item(s) for user {user.Username}", LogLevel.Info);
-        var baseUrl = GetBaseUrl();
+        var baseUrl = GetBaseUrl(publicBaseUrl);
         LogBuffer.AddLog($"[Stream] Base URL: {baseUrl}", LogLevel.Info);
         var dtoOptions = new DtoOptions(true);
         var dtos = _dtoService.GetBaseItemDtos(items, dtoOptions, user);
@@ -307,7 +307,7 @@ public class AddonController : ControllerBase
         };
         var result = folder.GetItems(query);
         var dtos = _dtoService.GetBaseItemDtos(result.Items, dtoOptions, user);
-    var baseUrl = GetBaseUrl();
+    var baseUrl = GetBaseUrl(config.PublicBaseUrl);
         var metas = dtos.Select(dto => MapToMeta(dto, stremioType, baseUrl));
 
         return Ok(new { metas });
@@ -339,7 +339,7 @@ public class AddonController : ControllerBase
             Fields = [ItemFields.ProviderIds, ItemFields.Overview, ItemFields.Genres],
         };
         var dto = _dtoService.GetBaseItemDto(item, dtoOptions, user);
-        var baseUrl = GetBaseUrl();
+        var baseUrl = GetBaseUrl(config.PublicBaseUrl);
         var meta = MapToMeta(dto, stremioType, baseUrl, includeDetails: true);
 
         if (stremioType is StremioType.Series)
@@ -389,7 +389,7 @@ public class AddonController : ControllerBase
         }
 
         LogBuffer.AddLog($"[Stream] Found item: {item.Name} (Type: {item.GetType().Name}, Id: {item.Id})", LogLevel.Info);
-        var result = GetStreamsResult(userId, [item], config.AuthToken);
+        var result = GetStreamsResult(userId, [item], config.AuthToken, config.PublicBaseUrl);
         LogBuffer.AddLog($"[Stream] Returning stream result for {item.Name}", LogLevel.Info);
         return result;
     }
@@ -436,7 +436,7 @@ public class AddonController : ControllerBase
             return Ok(new { streams = Array.Empty<object>() });
         }
 
-        return GetStreamsResult(userId, items, config.AuthToken);
+        return GetStreamsResult(userId, items, config.AuthToken, config.PublicBaseUrl);
     }
 
     [HttpGet("stream/series/tt{imdbId}:{seasonNum:int}:{episodeNum:int}.json")]
@@ -523,6 +523,6 @@ public class AddonController : ControllerBase
         }
 
         LogBuffer.AddLog($"[Stream] Returning streams for {episodeItems.Count} episode(s)", LogLevel.Info);
-        return GetStreamsResult(userId, episodeItems, config.AuthToken);
+        return GetStreamsResult(userId, episodeItems, config.AuthToken, config.PublicBaseUrl);
     }
 }
