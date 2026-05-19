@@ -15,4 +15,8 @@ public class BehaviorHintsDto
     [JsonPropertyName("videoSize")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public long? VideoSize { get; set; }
+
+    [JsonPropertyName("notWebReady")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool NotWebReady { get; set; }
 }
