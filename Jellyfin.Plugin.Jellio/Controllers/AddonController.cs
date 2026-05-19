@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Mime;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
@@ -26,6 +27,9 @@ namespace Jellyfin.Plugin.Jellio.Controllers;
 [Produces(MediaTypeNames.Application.Json)]
 public class AddonController : ControllerBase
 {
+    private static readonly string PluginVersion =
+        Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
+
     private readonly IUserManager _userManager;
     private readonly IUserViewManager _userViewManager;
     private readonly IDtoService _dtoService;
@@ -221,7 +225,7 @@ public class AddonController : ControllerBase
         var manifest = new
         {
             id = "com.stremio.jellio",
-            version = "0.0.1",
+            version = PluginVersion,
             name = "Jellio",
             description = descriptionText,
             resources = new object[]
