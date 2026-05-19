@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Mime;
@@ -176,6 +177,12 @@ public class AddonController : ControllerBase
                     Url = streamUrl,
                     Name = "Jellio",
                     Description = source.Name,
+                    BehaviorHints = new BehaviorHintsDto
+                    {
+                        Filename = string.IsNullOrEmpty(source.Path) ? null : Path.GetFileName(source.Path),
+                        VideoSize = source.Size,
+                        VideoHash = OpenSubtitlesHash.ComputeFromPath(source.Path),
+                    },
                 };
             });
         }).ToList();
