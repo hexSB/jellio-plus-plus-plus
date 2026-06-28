@@ -156,7 +156,7 @@ public class AddonController : ControllerBase
         var baseUrl = GetBaseUrl(publicBaseUrl);
         LogBuffer.AddLog($"[Stream] Base URL: {baseUrl}", LogLevel.Info);
         var dtoOptions = new DtoOptions(true);
-        var dtos = _dtoService.GetBaseItemDtos(items, dtoOptions, user);
+        var dtos = _dtoService.GetBaseItemDtos(items, dtoOptions, user, null, false);
         LogBuffer.AddLog($"[Stream] Got {dtos.Count} DTO(s)", LogLevel.Info);
 
         var streams = dtos.SelectMany(dto =>
@@ -338,7 +338,7 @@ public class AddonController : ControllerBase
             DtoOptions = dtoOptions,
         };
         var result = folder.GetItems(query);
-        var dtos = _dtoService.GetBaseItemDtos(result.Items, dtoOptions, user);
+        var dtos = _dtoService.GetBaseItemDtos(result.Items, dtoOptions, user, null, true);
         var baseUrl = GetBaseUrl(config.PublicBaseUrl);
         var metas = dtos.Select(dto => MapToMeta(dto, stremioType, baseUrl));
 
@@ -383,7 +383,7 @@ public class AddonController : ControllerBase
 
             var episodes = series.GetEpisodes(user, dtoOptions, false).ToList();
             var seriesItemOptions = new DtoOptions { Fields = [ItemFields.Overview] };
-            var dtos = _dtoService.GetBaseItemDtos(episodes, seriesItemOptions, user);
+            var dtos = _dtoService.GetBaseItemDtos(episodes, seriesItemOptions, user, null, true);
             var videos = dtos.Select(episode => new VideoDto
             {
                 Id = $"jelliopp:{episode.Id}",
