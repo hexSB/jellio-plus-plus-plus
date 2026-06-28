@@ -2,7 +2,7 @@ name: Build and Release
 
 on:
   release:
-    types: [created]
+    types: [created, published]
 
 jobs:
   release:
@@ -15,10 +15,10 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup .NET 9
+      - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '10.0.x'
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -80,12 +80,12 @@ jobs:
       - name: Run Tests
         run: dotnet test --verbosity normal
 
-      - name: Build Jellyfin Plugin & Package ZIP (net9)
+      - name: Build Jellyfin Plugin & Package ZIP (net10)
         uses: oddstr13/jellyfin-plugin-repository-manager@v1.1.1
         id: jprm
         with:
           # Action expects 'dotnet-target' (not dotnet-framework)
-          dotnet-target: 'net9.0'
+          dotnet-target: 'net10.0'
           version: ${{ steps.version.outputs.version_number }}
 
       - name: Get Zip Filename and Path
