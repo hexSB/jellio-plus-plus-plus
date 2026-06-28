@@ -86,7 +86,7 @@ public class WebController : ControllerBase
             return Unauthorized();
         }
 
-        var friendlyName = _serverApplicationHost.FriendlyName;
+        var friendlyName = "Jellyfin";
         BaseItemDto[] libraries;
         try
         {
