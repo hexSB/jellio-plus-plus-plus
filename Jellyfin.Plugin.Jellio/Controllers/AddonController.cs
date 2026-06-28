@@ -240,6 +240,7 @@ public class AddonController : ControllerBase
                         ["enableDirectPlay"] = "false",
                         ["enableDirectStream"] = "false",
                         ["maxAudioChannels"] = "6",
+                        ["maxStreamingBitrate"] = "120000000",
                     };
                     if (audioStream != null)
                     {
