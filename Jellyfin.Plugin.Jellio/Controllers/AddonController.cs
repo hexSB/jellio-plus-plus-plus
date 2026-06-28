@@ -176,23 +176,22 @@ public class AddonController : ControllerBase
             return dto.MediaSources.Select(source =>
             {
                 /*
-                 * Jellyfin's HLS endpoint requires the caller to declare which codecs the player supports.
-                 * It compares these against the media file's codecs to decide whether to pass through without re-encoding or transcode.
-                 *
-                 * Stremio's addon protocol has no mechanism for the client to advertise its codec capabilities to addons, so we hardcode them here. The lists below reflect what Stremio's players can decode. This is the same pattern every Jellyfin client follows - e.g. jellyfin-web builds its codec list.
-                 * See: https://github.com/jellyfin/jellyfin-web/blob/285196329/src/scripts/browserDeviceProfile.js#L914-L925
-                 *
-                 * Without these params Jellyfin would fall back to "m3u8" as the audio codec name, producing invalid FFmpeg commands.
-                 * See: https://github.com/jellyfin/jellyfin/issues/12926
+                 * Keep the addon conservative: Stremio clients vary widely, and advertising broad codec
+                 * support lets Jellyfin copy formats such as AV1 or OPUS into HLS even when the actual
+                 * player cannot decode them. These flags force Jellyfin away from direct play/stream
+                 * decisions and toward a predictable H.264 + surround-capable audio transcode.
                  */
-                string[] videoCodecs = ["h264", "hevc", "av1"];
-                string[] audioCodecs = ["aac", "mp3", "ac3", "eac3", "flac", "opus"];
+                string[] videoCodecs = ["h264"];
+                string[] audioCodecs = ["eac3", "aac"];
                 var query = QueryString.Create(new Dictionary<string, string?>
                 {
                     ["mediaSourceId"] = source.Id,
                     ["api_key"] = authToken,
                     ["videoCodec"] = string.Join(',', videoCodecs),
                     ["audioCodec"] = string.Join(',', audioCodecs),
+                    ["enableDirectPlay"] = "false",
+                    ["enableDirectStream"] = "false",
+                    ["maxAudioChannels"] = "6",
                 });
                 var streamUrl = $"{baseUrl}/Videos/{dto.Id}/master.m3u8{query}";
                 LogBuffer.AddLog($"[Stream] Generated stream for {dto.Name} ({dto.Id}): {source.Name} - URL: {streamUrl}", LogLevel.Info);
