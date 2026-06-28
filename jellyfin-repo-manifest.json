@@ -8,6 +8,14 @@
         "category": "General",
         "versions": [
             {
+                "version": "1.6.5.0",
+                "changelog": "## Fixes\n\n- **Fix transcoding quality**: Replace `maxStreamingBitrate` (audio-only, silently ignored on video endpoint) with `videoBitRate=120Mbps` and add `maxWidth=3840`/`maxHeight=2160` resolution caps for 4K content\n- **Rename addon**: Stremio addon manifest name changed from 'Jellio++' to 'Jellyfin'",
+                "targetAbi": "12.0.0.0",
+                "sourceUrl": "https://github.com/hexSB/jellio-plus-plus-plus/releases/download/v1.6.5.0/jellio_1.6.5.0.zip",
+                "checksum": "2e85c0163ffe7b6bcffe0f993f9a95f1",
+                "timestamp": "2026-06-28T09:22:14Z"
+            },
+            {
                 "version": "1.6.4.0",
                 "changelog": "## Fixes\n\n- **Set maxStreamingBitrate to 120 Mbps** for source-quality transcoding. This fixes the 480p blurry stream issue introduced in v1.6.2 by ensuring Jellyfin transcodes at the source file's quality rather than defaulting to a low bitrate.",
                 "targetAbi": "12.0.0.0",
