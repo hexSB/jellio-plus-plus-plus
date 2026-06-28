@@ -9,7 +9,7 @@
         "versions": [
             {
                 "version": "1.6.0.0",
-                "changelog": "Updated for Jellyfin 12.0.0-rc1.\n",
+                "changelog": "Jellio++ compatibility build for Jellyfin 12.0.0-rc1.\n\nChanges:\n- Retargets the plugin and tests to .NET 10.\n- Updates Jellyfin.Controller and Jellyfin.Model references to 12.0.0-rc1.\n- Fixes catalog, stream, and series metadata DTO generation for Jellyfin 12's updated IDtoService.GetBaseItemDtos signature.\n- Updates plugin repository metadata to target ABI 12.0.0.0.\n\nUse this release only for Jellyfin 12 RC servers. Jellyfin 10.11 users should stay on the 1.5.x line.\n",
                 "targetAbi": "12.0.0.0",
                 "sourceUrl": "https://github.com/hexSB/jellio-plus-plus/releases/download/v1.6.0-rc1/jellio_1.6.0.0.zip",
                 "checksum": "e40b83b8ada49ed1358d41b3e401fdbe",
