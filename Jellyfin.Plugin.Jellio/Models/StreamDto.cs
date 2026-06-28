@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Jellyfin.Plugin.Jellio.Models;
@@ -16,4 +17,8 @@ public class StreamDto
     [JsonPropertyName("behaviorHints")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public BehaviorHintsDto? BehaviorHints { get; set; }
+
+    [JsonPropertyName("subtitles")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IEnumerable<SubtitleDto>? Subtitles { get; set; }
 }
