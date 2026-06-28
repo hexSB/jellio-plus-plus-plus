@@ -85,6 +85,42 @@ public class AddonController : ControllerBase
         return $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
     }
 
+    private static string GetAudioStreamLabel(MediaStream? audioStream)
+    {
+        if (audioStream == null)
+        {
+            return "Default audio";
+        }
+
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(audioStream.Language))
+        {
+            parts.Add(audioStream.Language);
+        }
+
+        if (!string.IsNullOrWhiteSpace(audioStream.Title))
+        {
+            parts.Add(audioStream.Title);
+        }
+
+        if (!string.IsNullOrWhiteSpace(audioStream.Codec))
+        {
+            parts.Add(audioStream.Codec.ToUpperInvariant());
+        }
+
+        if (audioStream.Channels.HasValue)
+        {
+            parts.Add(audioStream.Channels.Value == 6 ? "5.1" : $"{audioStream.Channels.Value} ch");
+        }
+
+        if (audioStream.IsDefault)
+        {
+            parts.Add("Default");
+        }
+
+        return parts.Count == 0 ? $"Audio track {audioStream.Index}" : string.Join(" - ", parts);
+    }
+
     private static MetaDto MapToMeta(
         BaseItemDto dto,
         StremioType stremioType,
@@ -173,8 +209,17 @@ public class AddonController : ControllerBase
                 return Enumerable.Empty<StreamDto>();
             }
 
-            return dto.MediaSources.Select(source =>
+            return dto.MediaSources.SelectMany(source =>
             {
+                var audioStreams = source.MediaStreams
+                    .Where(stream => stream.Type == MediaStreamType.Audio)
+                    .OrderByDescending(stream => stream.IsDefault)
+                    .ThenBy(stream => stream.Index)
+                    .ToList();
+                var streamChoices = audioStreams.Count == 0
+                    ? new MediaStream?[] { null }
+                    : audioStreams.Cast<MediaStream?>().ToArray();
+
                 /*
                  * Keep the addon conservative: Stremio clients vary widely, and advertising broad codec
                  * support lets Jellyfin copy formats such as AV1 or OPUS into HLS even when the actual
@@ -183,31 +228,41 @@ public class AddonController : ControllerBase
                  */
                 string[] videoCodecs = ["h264"];
                 string[] audioCodecs = ["eac3", "aac"];
-                var query = QueryString.Create(new Dictionary<string, string?>
+
+                return streamChoices.Select(audioStream =>
                 {
-                    ["mediaSourceId"] = source.Id,
-                    ["api_key"] = authToken,
-                    ["videoCodec"] = string.Join(',', videoCodecs),
-                    ["audioCodec"] = string.Join(',', audioCodecs),
-                    ["enableDirectPlay"] = "false",
-                    ["enableDirectStream"] = "false",
-                    ["maxAudioChannels"] = "6",
-                });
-                var streamUrl = $"{baseUrl}/Videos/{dto.Id}/master.m3u8{query}";
-                LogBuffer.AddLog($"[Stream] Generated stream for {dto.Name} ({dto.Id}): {source.Name} - URL: {streamUrl}", LogLevel.Info);
-                return new StreamDto
-                {
-                    Url = streamUrl,
-                    Name = "Jellio++",
-                    Description = source.Name,
-                    BehaviorHints = new BehaviorHintsDto
+                    var queryParameters = new Dictionary<string, string?>
                     {
-                        Filename = string.IsNullOrEmpty(source.Path) ? null : Path.GetFileName(source.Path),
-                        VideoSize = source.Size,
-                        VideoHash = OpenSubtitlesHash.ComputeFromPath(source.Path),
-                        NotWebReady = true,
-                    },
-                };
+                        ["mediaSourceId"] = source.Id,
+                        ["api_key"] = authToken,
+                        ["videoCodec"] = string.Join(',', videoCodecs),
+                        ["audioCodec"] = string.Join(',', audioCodecs),
+                        ["enableDirectPlay"] = "false",
+                        ["enableDirectStream"] = "false",
+                        ["maxAudioChannels"] = "6",
+                    };
+                    if (audioStream != null)
+                    {
+                        queryParameters["audioStreamIndex"] = audioStream.Index.ToString(CultureInfo.InvariantCulture);
+                    }
+
+                    var audioLabel = GetAudioStreamLabel(audioStream);
+                    var streamUrl = $"{baseUrl}/Videos/{dto.Id}/master.m3u8{QueryString.Create(queryParameters)}";
+                    LogBuffer.AddLog($"[Stream] Generated stream for {dto.Name} ({dto.Id}): {source.Name} - Audio: {audioLabel} - URL: {streamUrl}", LogLevel.Info);
+                    return new StreamDto
+                    {
+                        Url = streamUrl,
+                        Name = $"Jellio++ - {audioLabel}",
+                        Description = source.Name,
+                        BehaviorHints = new BehaviorHintsDto
+                        {
+                            Filename = string.IsNullOrEmpty(source.Path) ? null : Path.GetFileName(source.Path),
+                            VideoSize = source.Size,
+                            VideoHash = OpenSubtitlesHash.ComputeFromPath(source.Path),
+                            NotWebReady = true,
+                        },
+                    };
+                });
             });
         }).ToList();
 
