@@ -220,6 +220,32 @@ public class AddonController : ControllerBase
                     ? new MediaStream?[] { null }
                     : audioStreams.Cast<MediaStream?>().ToArray();
 
+                var subtitleStreams = source.MediaStreams
+                    .Where(stream => stream.Type == MediaStreamType.Subtitle && stream.IsTextSubtitleStream)
+                    .OrderByDescending(stream => stream.IsDefault)
+                    .ThenByDescending(stream => stream.IsForced)
+                    .ThenBy(stream => stream.Index)
+                    .ToList();
+
+                var subtitles = subtitleStreams.Select(sub =>
+                {
+                    var format = sub.Codec switch
+                    {
+                        "subrip" => "srt",
+                        "ass" => "ass",
+                        "webvtt" => "vtt",
+                        _ => "srt",
+                    };
+                    var lang = string.IsNullOrEmpty(sub.Language) ? "und" : sub.Language;
+                    var label = string.IsNullOrEmpty(sub.Title) ? lang : sub.Title;
+                    return new SubtitleDto
+                    {
+                        Id = $"jelliopp-{dto.Id}-{sub.Index}",
+                        Url = $"{baseUrl}/Videos/{dto.Id}/{source.Id}/Subtitles/{sub.Index}/0/Stream.{format}?api_key={authToken}",
+                        Lang = $"{label} ({lang})",
+                    };
+                }).ToList();
+
                 /*
                  * Keep the addon conservative: Stremio clients vary widely, and advertising broad codec
                  * support lets Jellyfin copy formats such as AV1 or OPUS into HLS even when the actual
@@ -264,6 +290,7 @@ public class AddonController : ControllerBase
                             VideoHash = OpenSubtitlesHash.ComputeFromPath(source.Path),
                             NotWebReady = true,
                         },
+                        Subtitles = subtitles.Count > 0 ? subtitles : null,
                     };
                 });
             });
