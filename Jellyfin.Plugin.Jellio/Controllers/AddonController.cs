@@ -255,7 +255,7 @@ public class AddonController : ControllerBase
                     return new StreamDto
                     {
                         Url = streamUrl,
-                        Name = $"Jellyfin - {audioLabel}",
+                        Name = $"Jellio++ - {audioLabel}",
                         Description = source.Name,
                         BehaviorHints = new BehaviorHintsDto
                         {
@@ -311,7 +311,7 @@ public class AddonController : ControllerBase
         {
             id = "com.stremio.jelliopp",
             version = PluginVersion,
-            name = "Jellyfin",
+            name = "Jellio++",
             description = descriptionText,
             resources = new object[]
             {
