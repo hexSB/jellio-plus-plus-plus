@@ -9,3 +9,5 @@ category: "General"
 owner: "wujekbogdan"
 artifacts:
   - "Jellyfin.Plugin.Jellio.dll"
+changelog: |
+  Updated for Jellyfin 12.0.0-rc1.
