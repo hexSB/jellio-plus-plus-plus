@@ -2,11 +2,19 @@
     {
         "guid": "e874be83-fe36-4568-abac-f5ce0574b409",
         "name": "Jellio++",
-        "description": "This plugin provides integration between Jellyfin and the Jellio++ service.\nFork of InfiniteAvenger/jellio-plus.\n",
+        "description": "This plugin provides integration between Jellyfin and the Jellio++ service.\nFork of InfiniteAvenger/jellio-plus, updated for Jellyfin 12.0.0-rc1.\n",
         "overview": "Integrates Jellio++ features with Jellyfin.",
         "owner": "wujekbogdan",
         "category": "General",
         "versions": [
+            {
+                "version": "1.6.0.0",
+                "changelog": "Updated for Jellyfin 12.0.0-rc1.\n",
+                "targetAbi": "12.0.0.0",
+                "sourceUrl": "https://github.com/hexSB/jellio-plus-plus/releases/download/v1.6.0-rc1/jellio_1.6.0.0.zip",
+                "checksum": "e40b83b8ada49ed1358d41b3e401fdbe",
+                "timestamp": "2026-06-28T07:12:10Z"
+            },
             {
                 "version": "1.5.0.0",
                 "changelog": "## What's Changed\r\n\r\n- **Stream URLs now respect `PublicBaseUrl`**: fixes streams when Jellyfin runs behind a reverse proxy. ([#1](https://github.com/wujekbogdan/jellio-plus/pull/1))\r\n- **Stream `behaviorHints` with OpenSubtitles hash, filename, and file size**: external subtitle addons like OpenSubtitles now get accurate matches instead of falling back to title or IMDB ID. ([#2](https://github.com/wujekbogdan/jellio-plus/pull/2))\r\n- **Switched streaming to HLS**: fixes seeking and the progress bar, enables proper transcoding (passthrough where possible, partial or full only when needed), no more forced stereo downmix. ([#4](https://github.com/wujekbogdan/jellio-plus/pull/4))\r\n- **Stremio addon version reads from the assembly**: was hardcoded to `0.0.1`, now stays in sync with the plugin version automatically. ([#3](https://github.com/wujekbogdan/jellio-plus/pull/3))\r\n- **Rebranded to Jellio++**: `/jellio` routes are now `/jelliopp`, Stremio addon ID changed. Existing installs need to be reinstalled in Stremio. ([#5](https://github.com/wujekbogdan/jellio-plus/pull/5))\r\n\r\n**Full Changelog**: https://github.com/wujekbogdan/jellio-plus/commits/v1.5.0",
