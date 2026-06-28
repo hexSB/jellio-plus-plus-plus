@@ -240,7 +240,9 @@ public class AddonController : ControllerBase
                         ["enableDirectPlay"] = "false",
                         ["enableDirectStream"] = "false",
                         ["maxAudioChannels"] = "6",
-                        ["maxStreamingBitrate"] = "120000000",
+                        ["videoBitRate"] = "120000000",
+                        ["maxWidth"] = "3840",
+                        ["maxHeight"] = "2160",
                     };
                     if (audioStream != null)
                     {
@@ -253,7 +255,7 @@ public class AddonController : ControllerBase
                     return new StreamDto
                     {
                         Url = streamUrl,
-                        Name = $"Jellio++ - {audioLabel}",
+                        Name = $"Jellyfin - {audioLabel}",
                         Description = source.Name,
                         BehaviorHints = new BehaviorHintsDto
                         {
@@ -309,7 +311,7 @@ public class AddonController : ControllerBase
         {
             id = "com.stremio.jelliopp",
             version = PluginVersion,
-            name = "Jellio++",
+            name = "Jellyfin",
             description = descriptionText,
             resources = new object[]
             {
