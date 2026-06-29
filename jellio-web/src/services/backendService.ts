@@ -59,6 +59,11 @@ export const saveConfigDataSchema = z.object({
   jellyseerrApiKey: z.string().optional(),
   publicBaseUrl: z.string().optional(),
   selectedLibraries: z.array(z.string()).optional(),
+  // Transcoding settings
+  enableDirectStreaming: z.boolean(),
+  forceTranscodeVideo: z.boolean(),
+  forceTranscodeAudio: z.boolean(),
+  maxVideoBitrate: z.number(),
 });
 
 export type SaveConfigData = z.infer<typeof saveConfigDataSchema>;

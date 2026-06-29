@@ -247,13 +247,47 @@ public class AddonController : ControllerBase
                 }).ToList();
 
                 /*
-                 * Keep the addon conservative: Stremio clients vary widely, and advertising broad codec
-                 * support lets Jellyfin copy formats such as AV1 or OPUS into HLS even when the actual
-                 * player cannot decode them. These flags force Jellyfin away from direct play/stream
-                 * decisions and toward a predictable H.264 + surround-capable audio transcode.
+                 * Enable direct streaming to preserve original video quality when possible.
+                 * Jellyfin will only transcode what the client cannot decode.
+                 * Video codecs: AV1, HEVC, H.264 (widely supported by modern Stremio clients)
+                 * Audio codecs: OPUS, EAC3, AAC (Stremio supports OPUS on desktop)
                  */
-                string[] videoCodecs = ["h264"];
-                string[] audioCodecs = ["eac3", "aac"];
+                string[] videoCodecs;
+                string[] audioCodecs;
+
+                var pluginConfig = Plugin.Instance?.Configuration;
+                var enableDirectStreaming = pluginConfig?.EnableDirectStreaming ?? true;
+                var forceTranscodeVideo = pluginConfig?.ForceTranscodeVideo ?? false;
+                var forceTranscodeAudio = pluginConfig?.ForceTranscodeAudio ?? false;
+                var maxVideoBitrate = pluginConfig?.MaxVideoBitrate ?? 120;
+
+                if (forceTranscodeVideo)
+                {
+                    // Force transcoding mode - use H.264 for maximum compatibility
+                    videoCodecs = ["h264"];
+                }
+                else if (enableDirectStreaming)
+                {
+                    // Direct streaming mode - advertise support for modern codecs
+                    // Jellyfin will decide what to transcode based on source vs client capabilities
+                    videoCodecs = ["av1", "hevc", "h264"];
+                }
+                else
+                {
+                    // Legacy mode - force H.264 transcoding (original behavior)
+                    videoCodecs = ["h264"];
+                }
+
+                if (forceTranscodeAudio)
+                {
+                    // Force audio transcoding
+                    audioCodecs = ["aac"];
+                }
+                else
+                {
+                    // Support modern audio codecs
+                    audioCodecs = ["opus", "eac3", "aac"];
+                }
 
                 return streamChoices.Select(audioStream =>
                 {
@@ -263,13 +297,14 @@ public class AddonController : ControllerBase
                         ["api_key"] = authToken,
                         ["videoCodec"] = string.Join(',', videoCodecs),
                         ["audioCodec"] = string.Join(',', audioCodecs),
-                        ["enableDirectPlay"] = "false",
-                        ["enableDirectStream"] = "false",
+                        ["enableDirectPlay"] = enableDirectStreaming ? "true" : "false",
+                        ["enableDirectStream"] = enableDirectStreaming ? "true" : "false",
                         ["maxAudioChannels"] = "6",
-                        ["videoBitRate"] = "120000000",
+                        ["videoBitRate"] = $"{maxVideoBitrate * 1000000}",
                         ["maxWidth"] = "3840",
                         ["maxHeight"] = "2160",
                     };
+
                     if (audioStream != null)
                     {
                         queryParameters["audioStreamIndex"] = audioStream.Index.ToString(CultureInfo.InvariantCulture);
@@ -277,7 +312,23 @@ public class AddonController : ControllerBase
 
                     var audioLabel = GetAudioStreamLabel(audioStream);
                     var streamUrl = $"{baseUrl}/Videos/{dto.Id}/master.m3u8{QueryString.Create(queryParameters)}";
-                    LogBuffer.AddLog($"[Stream] Generated stream for {dto.Name} ({dto.Id}): {source.Name} - Audio: {audioLabel} - URL: {streamUrl}", LogLevel.Info);
+                    
+                    // Enhanced logging with codec info
+                    var sourceVideoCodec = source.MediaStreams
+                        .FirstOrDefault(s => s.Type == MediaStreamType.Video)?.Codec ?? "unknown";
+                    var sourceAudioCodec = audioStream?.Codec ?? "unknown";
+                    
+                    LogBuffer.AddLog($"[Stream] Generated stream for {dto.Name} ({dto.Id}):", LogLevel.Info);
+                    LogBuffer.AddLog($"[Stream]   Source video: {sourceVideoCodec}, Source audio: {sourceAudioCodec}", LogLevel.Info);
+                    
+                    var targetVideo = forceTranscodeVideo ? "H.264 (transcode)" : (enableDirectStreaming ? "Direct stream" : "H.264 (transcode)");
+                    LogBuffer.AddLog($"[Stream]   Target video: {targetVideo}", LogLevel.Info);
+                    
+                    var targetAudio = forceTranscodeAudio ? "transcode" : "direct stream";
+                    LogBuffer.AddLog($"[Stream]   Target audio: {audioLabel} ({targetAudio})", LogLevel.Info);
+                    
+                    LogBuffer.AddLog($"[Stream]   URL: {streamUrl}", LogLevel.Info);
+                    
                     return new StreamDto
                     {
                         Url = streamUrl,

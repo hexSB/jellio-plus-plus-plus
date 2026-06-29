@@ -143,7 +143,11 @@ public class WebController : ControllerBase
                 jellyseerrUrl = string.Empty,
                 jellyseerrApiKey = string.Empty,
                 publicBaseUrl = string.Empty,
-                selectedLibraries = Array.Empty<string>()
+                selectedLibraries = Array.Empty<string>(),
+                enableDirectStreaming = true,
+                forceTranscodeVideo = false,
+                forceTranscodeAudio = false,
+                maxVideoBitrate = 120
             });
         }
 
@@ -153,7 +157,11 @@ public class WebController : ControllerBase
             jellyseerrUrl = config.JellyseerrUrl,
             jellyseerrApiKey = config.JellyseerrApiKey,
             publicBaseUrl = config.PublicBaseUrl,
-            selectedLibraries = config.SelectedLibraries?.Select(g => g.ToString("N")).ToArray() ?? Array.Empty<string>()
+            selectedLibraries = config.SelectedLibraries?.Select(g => g.ToString("N")).ToArray() ?? Array.Empty<string>(),
+            enableDirectStreaming = config.EnableDirectStreaming,
+            forceTranscodeVideo = config.ForceTranscodeVideo,
+            forceTranscodeAudio = config.ForceTranscodeAudio,
+            maxVideoBitrate = config.MaxVideoBitrate
         });
     }
 
@@ -201,6 +209,12 @@ public class WebController : ControllerBase
         {
             config.SelectedLibraries = new List<Guid>();
         }
+
+        // Save transcoding settings
+        config.EnableDirectStreaming = request.EnableDirectStreaming;
+        config.ForceTranscodeVideo = request.ForceTranscodeVideo;
+        config.ForceTranscodeAudio = request.ForceTranscodeAudio;
+        config.MaxVideoBitrate = request.MaxVideoBitrate;
 
         Plugin.Instance.SaveConfiguration();
 

@@ -11,4 +11,10 @@ public class PluginConfiguration : BasePluginConfiguration
     public string JellyseerrApiKey { get; set; } = string.Empty;
     public string PublicBaseUrl { get; set; } = string.Empty;
     public List<Guid> SelectedLibraries { get; set; } = new();
+
+    // Transcoding settings
+    public bool EnableDirectStreaming { get; set; } = true;
+    public bool ForceTranscodeVideo { get; set; } = false;
+    public bool ForceTranscodeAudio { get; set; } = false;
+    public int MaxVideoBitrate { get; set; } = 120;
 }
