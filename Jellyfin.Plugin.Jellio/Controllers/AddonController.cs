@@ -249,7 +249,7 @@ public class AddonController : ControllerBase
                 /*
                  * Enable direct streaming to preserve original video quality when possible.
                  * Jellyfin will only transcode what the client cannot decode.
-                 * Video codecs: AV1, HEVC, H.264 (widely supported by modern Stremio clients)
+                 * Video codecs: HEVC, H.264 (AV1 removed - Stremio web player doesn't decode it properly)
                  * Audio codecs: OPUS, EAC3, AAC (Stremio supports OPUS on desktop)
                  */
                 string[] videoCodecs;
@@ -269,8 +269,9 @@ public class AddonController : ControllerBase
                 else if (enableDirectStreaming)
                 {
                     // Direct streaming mode - advertise support for modern codecs
-                    // Jellyfin will decide what to transcode based on source vs client capabilities
-                    videoCodecs = ["av1", "hevc", "h264"];
+                    // AV1 removed: Stremio web player shows black screen with AV1
+                    // Jellyfin will transcode AV1 to H.264 while copying HEVC/H.264 directly
+                    videoCodecs = ["hevc", "h264"];
                 }
                 else
                 {
