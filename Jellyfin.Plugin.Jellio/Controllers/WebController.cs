@@ -147,8 +147,7 @@ public class WebController : ControllerBase
                 enableDirectStreaming = true,
                 forceTranscodeVideo = false,
                 forceTranscodeAudio = false,
-                maxVideoBitrate = 120,
-                defaultTags = string.Empty
+                maxVideoBitrate = 120
             });
         }
 
@@ -162,8 +161,7 @@ public class WebController : ControllerBase
             enableDirectStreaming = config.EnableDirectStreaming,
             forceTranscodeVideo = config.ForceTranscodeVideo,
             forceTranscodeAudio = config.ForceTranscodeAudio,
-            maxVideoBitrate = config.MaxVideoBitrate,
-            defaultTags = config.DefaultTags ?? string.Empty
+            maxVideoBitrate = config.MaxVideoBitrate
         });
     }
 
@@ -217,9 +215,6 @@ public class WebController : ControllerBase
         config.ForceTranscodeVideo = request.ForceTranscodeVideo;
         config.ForceTranscodeAudio = request.ForceTranscodeAudio;
         config.MaxVideoBitrate = request.MaxVideoBitrate;
-
-        // Save Jellyseerr tags
-        config.DefaultTags = request.DefaultTags ?? string.Empty;
 
         Plugin.Instance.SaveConfiguration();
 

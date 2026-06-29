@@ -36,7 +36,6 @@ const ConfigForm: FC<Props> = ({ serverInfo }) => {
       jellyseerrEnabled: false,
       jellyseerrUrl: '',
       jellyseerrApiKey: '',
-      defaultTags: '',
       publicBaseUrl: '',
       // Transcoding settings
       enableDirectStreaming: true,
@@ -65,7 +64,6 @@ const ConfigForm: FC<Props> = ({ serverInfo }) => {
           jellyseerrEnabled: values.jellyseerrEnabled ?? false,
           jellyseerrUrl: stripTrailingSlash(values.jellyseerrUrl ?? ''),
           jellyseerrApiKey: values.jellyseerrApiKey ?? '',
-          defaultTags: values.defaultTags ?? '',
           publicBaseUrl: stripTrailingSlash(values.publicBaseUrl ?? ''),
           selectedLibraries:
             values.libraries?.map((lib: { key: string }) =>

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
@@ -164,26 +163,6 @@ public class RequestController : ControllerBase
 
             bool isTV = string.Equals(type, "tv", StringComparison.OrdinalIgnoreCase);
 
-            // Parse default tags from config (comma-separated tag IDs)
-            int[]? tags = null;
-            if (!string.IsNullOrWhiteSpace(config.DefaultTags))
-            {
-                tags = config.DefaultTags
-                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                    .Select(s => int.TryParse(s.Trim(), out var tagId) ? tagId : (int?)null)
-                    .Where(t => t.HasValue)
-                    .Select(t => t!.Value)
-                    .ToArray();
-                if (tags.Length > 0)
-                {
-                    Console.WriteLine($"[Jellyseerr] Using tags: [{string.Join(", ", tags)}]");
-                }
-                else
-                {
-                    tags = null;
-                }
-            }
-
             // Build request body - only include seasons for TV shows
             object body;
             if (isTV)
@@ -199,8 +178,7 @@ public class RequestController : ControllerBase
                 {
                     mediaType = "tv",
                     mediaId = id,
-                    seasons,
-                    tags
+                    seasons
                 };
             }
             else
@@ -209,8 +187,7 @@ public class RequestController : ControllerBase
                 body = new
                 {
                     mediaType = "movie",
-                    mediaId = id,
-                    tags
+                    mediaId = id
                 };
             }
 

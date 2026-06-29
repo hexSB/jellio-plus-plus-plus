@@ -16,7 +16,4 @@ public class SaveConfigRequest
     public bool ForceTranscodeVideo { get; set; } = false;
     public bool ForceTranscodeAudio { get; set; } = false;
     public int MaxVideoBitrate { get; set; } = 120;
-
-    // Jellyseerr tags (comma-separated tag IDs)
-    public string? DefaultTags { get; set; }
 }

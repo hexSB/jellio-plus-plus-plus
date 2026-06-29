@@ -17,7 +17,4 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool ForceTranscodeVideo { get; set; } = false;
     public bool ForceTranscodeAudio { get; set; } = false;
     public int MaxVideoBitrate { get; set; } = 120;
-
-    // Jellyseerr tags (comma-separated tag IDs, e.g. "1,2,3")
-    public string DefaultTags { get; set; } = string.Empty;
 }

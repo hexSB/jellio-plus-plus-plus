@@ -57,7 +57,6 @@ export const saveConfigDataSchema = z.object({
   jellyseerrEnabled: z.boolean(),
   jellyseerrUrl: z.string().optional(),
   jellyseerrApiKey: z.string().optional(),
-  defaultTags: z.string().optional(),
   publicBaseUrl: z.string().optional(),
   selectedLibraries: z.array(z.string()).optional(),
   // Transcoding settings
