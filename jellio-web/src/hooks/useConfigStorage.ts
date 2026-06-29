@@ -20,6 +20,7 @@ const storedConfigSchema = z.object({
   jellyseerrEnabled: z.boolean().optional(),
   jellyseerrUrl: z.string().optional(),
   jellyseerrApiKey: z.string().optional(),
+  defaultTags: z.string().optional(),
   publicBaseUrl: z.string().optional(),
   // Transcoding settings
   enableDirectStreaming: z.boolean().optional(),
@@ -59,6 +60,9 @@ export const useConfigStorage = (
             if (config.jellyseerrApiKey) {
               form.setValue('jellyseerrApiKey', config.jellyseerrApiKey);
             }
+            if (config.defaultTags !== undefined) {
+              form.setValue('defaultTags', config.defaultTags);
+            }
             if (config.publicBaseUrl) {
               form.setValue('publicBaseUrl', config.publicBaseUrl);
             }
@@ -94,6 +98,9 @@ export const useConfigStorage = (
           }
           if (serverConfig.jellyseerrApiKey) {
             form.setValue('jellyseerrApiKey', serverConfig.jellyseerrApiKey);
+          }
+          if (serverConfig.defaultTags !== undefined) {
+            form.setValue('defaultTags', serverConfig.defaultTags);
           }
           if (serverConfig.publicBaseUrl) {
             form.setValue('publicBaseUrl', serverConfig.publicBaseUrl);
@@ -156,6 +163,7 @@ export const useConfigStorage = (
         jellyseerrEnabled: values.jellyseerrEnabled,
         jellyseerrUrl: stripTrailingSlash(values.jellyseerrUrl ?? ''),
         jellyseerrApiKey: values.jellyseerrApiKey,
+        defaultTags: values.defaultTags,
         publicBaseUrl: stripTrailingSlash(values.publicBaseUrl ?? ''),
         // Transcoding settings
         enableDirectStreaming: values.enableDirectStreaming,

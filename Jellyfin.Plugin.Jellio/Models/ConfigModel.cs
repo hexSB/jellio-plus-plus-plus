@@ -24,4 +24,7 @@ public class ConfigModel
     public bool ForceTranscodeVideo { get; init; } = false;
     public bool ForceTranscodeAudio { get; init; } = false;
     public int MaxVideoBitrate { get; init; } = 120;
+
+    // Jellyseerr tags (comma-separated tag IDs)
+    public string DefaultTags { get; init; } = string.Empty;
 }

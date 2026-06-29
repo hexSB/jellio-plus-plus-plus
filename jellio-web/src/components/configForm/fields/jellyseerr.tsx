@@ -89,6 +89,23 @@ export const JellyseerrFieldset: FC<Props> = ({ form }) => {
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="defaultTags"
+            render={({ field }) => (
+              <FormItem className="flex flex-col md:col-span-2">
+                <FormLabel>Default Tags</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. 1,2,3" {...field} />
+                </FormControl>
+                <FormDescription className="text-xs min-h-[2.5rem]">
+                  Comma-separated Jellyseerr tag IDs to apply to all requests
+                  (e.g. "1" for dub, "2" for sub). Leave empty for no tags.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
       )}
     </div>
