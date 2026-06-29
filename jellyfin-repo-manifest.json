@@ -4,80 +4,16 @@
         "name": "Jellio++",
         "description": "This plugin provides integration between Jellyfin and the Jellio++ service.\nFork of InfiniteAvenger/jellio-plus, updated for Jellyfin 12.0.0-rc1.\n",
         "overview": "Integrates Jellio++ features with Jellyfin.",
-        "owner": "wujekbogdan",
+        "owner": "hexSB",
         "category": "General",
         "versions": [
             {
-                "version": "1.7.0.0",
-                "changelog": "## Features\n\n- **Subtitles from Jellyfin**: Text subtitles (SRT, ASS, VTT) are now served directly from Jellyfin to Stremio's built-in subtitle picker\n- Each stream includes all available text subtitle tracks with language labels\n- Image-based subtitles (PGS, VobSub) are skipped as they cannot be served as standalone files\n\n## Fixes (from v1.6.6.0)\n\n- Transcoding quality fix (videoBitRate + resolution caps)\n- Default server name set to 'Jellyfin'",
+                "version": "1.7.2.0",
+                "changelog": "## Fix\n\n- Remove AV1 from direct streaming codecs\n- Stremio web player shows black screen with AV1 video\n- AV1 is now transcoded to H.264 while HEVC/H.264 still direct stream\n\nThis fixes the black screen issue while preserving quality for HEVC and H.264 content.",
                 "targetAbi": "12.0.0.0",
-                "sourceUrl": "https://github.com/hexSB/jellio-plus-plus-plus/releases/download/v1.7.0.0/jellio_1.7.0.0.zip",
-                "checksum": "57053de634255d456ff0a8c2dfa7f8e1",
-                "timestamp": "2026-06-28T09:48:22Z"
-            },
-            {
-                "version": "1.6.6.0",
-                "changelog": "## Fixes\n\n- **Revert addon name**: Stremio addon manifest name restored to 'Jellio++'\n- **Default server name**: Catalogue names now default to 'Movies | Jellyfin' instead of the server hostname\n- Includes v1.6.5.0 transcoding quality fix (videoBitRate + resolution caps)",
-                "targetAbi": "12.0.0.0",
-                "sourceUrl": "https://github.com/hexSB/jellio-plus-plus-plus/releases/download/v1.6.6.0/jellio_1.6.6.0.zip",
-                "checksum": "60e3120b4c8ebb17005a8286a68252fa",
-                "timestamp": "2026-06-28T09:26:20Z"
-            },
-            {
-                "version": "1.6.5.0",
-                "changelog": "## Fixes\n\n- **Fix transcoding quality**: Replace `maxStreamingBitrate` (audio-only, silently ignored on video endpoint) with `videoBitRate=120Mbps` and add `maxWidth=3840`/`maxHeight=2160` resolution caps for 4K content\n- **Rename addon**: Stremio addon manifest name changed from 'Jellio++' to 'Jellyfin'",
-                "targetAbi": "12.0.0.0",
-                "sourceUrl": "https://github.com/hexSB/jellio-plus-plus-plus/releases/download/v1.6.5.0/jellio_1.6.5.0.zip",
-                "checksum": "bb854334099e7c1676df84685f2a9e0d",
-                "timestamp": "2026-06-28T09:22:31Z"
-            },
-            {
-                "version": "1.6.4.0",
-                "changelog": "## Fixes\n\n- **Set maxStreamingBitrate to 120 Mbps** for source-quality transcoding. This fixes the 480p blurry stream issue introduced in v1.6.2 by ensuring Jellyfin transcodes at the source file's quality rather than defaulting to a low bitrate.",
-                "targetAbi": "12.0.0.0",
-                "sourceUrl": "https://github.com/hexSB/jellio-plus-plus-plus/releases/download/v1.6.4.0/jellio_1.6.4.0.zip",
-                "checksum": "32f5f5de68295ccdf3079d2bbea200ab",
-                "timestamp": "2026-06-28T08:52:39Z"
-            },
-            {
-                "version": "1.6.3.0",
-                "changelog": "Expose Jellyfin audio tracks as separate Stremio stream options. Each generated stream URL now includes audioStreamIndex so users can pick the desired audio track while keeping the forced Jellyfin transcode profile.",
-                "targetAbi": "12.0.0.0",
-                "sourceUrl": "https://github.com/hexSB/jellio-plus-plus-plus/releases/download/v1.6.3.0/jellio_1.6.3.0.zip",
-                "checksum": "3e85135cae864ab1dbbfa1300871cd71",
-                "timestamp": "2026-06-28T08:08:50Z"
-            },
-            {
-                "version": "1.6.2.0",
-                "changelog": "Force Jellyfin to transcode streams through a conservative H.264 + EAC3/AAC HLS profile.\\n\\n- Disable direct play/direct stream for addon HLS URLs\\n- Advertise H.264 video only to avoid unsupported AV1/HEVC copy-through\\n- Prefer EAC3/AAC audio with up to 5.1 channels",
-                "targetAbi": "12.0.0.0",
-                "sourceUrl": "https://github.com/hexSB/jellio-plus-plus-plus/releases/download/v1.6.2.0/jellio_1.6.2.0.zip",
-                "checksum": "5313ae81d5687974a425ea511337e826",
-                "timestamp": "2026-06-28T08:00:16Z"
-            },
-            {
-                "version": "1.6.1.0",
-                "changelog": "Jellio++ Jellyfin 12 refresh build.\n\nThis release intentionally bumps the plugin package version to 1.6.1.0 so Jellyfin detects it as a new update instead of reusing cached 1.6.0.0 metadata.\n\nIncludes the Jellyfin 12.0.0-rc1 compatibility changes from v1.6.0-rc1:\n- .NET 10 plugin/test target.\n- Jellyfin.Controller and Jellyfin.Model 12.0.0-rc1 references.\n- Updated IDtoService.GetBaseItemDtos calls for Jellyfin 12.\n- Plugin repository target ABI 12.0.0.0.\n",
-                "targetAbi": "12.0.0.0",
-                "sourceUrl": "https://github.com/hexSB/jellio-plus-plus-plus/releases/download/v1.6.1-rc1/jellio_1.6.1.0.zip",
-                "checksum": "e21dc68051972f87f3b12419641964fa",
-                "timestamp": "2026-06-28T07:25:41Z"
-            },
-            {
-                "version": "1.6.0.0",
-                "changelog": "Jellio++ compatibility build for Jellyfin 12.0.0-rc1.\n\nChanges:\n- Retargets the plugin and tests to .NET 10.\n- Updates Jellyfin.Controller and Jellyfin.Model references to 12.0.0-rc1.\n- Fixes catalog, stream, and series metadata DTO generation for Jellyfin 12's updated IDtoService.GetBaseItemDtos signature.\n- Updates plugin repository metadata to target ABI 12.0.0.0.\n\nUse this release only for Jellyfin 12 RC servers. Jellyfin 10.11 users should stay on the 1.5.x line.\n",
-                "targetAbi": "12.0.0.0",
-                "sourceUrl": "https://github.com/hexSB/jellio-plus-plus-plus/releases/download/v1.6.0-rc1/jellio_1.6.0.0.zip",
-                "checksum": "e40b83b8ada49ed1358d41b3e401fdbe",
-                "timestamp": "2026-06-28T07:12:10Z"
-            },
-            {
-                "version": "1.5.0.0",
-                "changelog": "## What's Changed\r\n\r\n- **Stream URLs now respect `PublicBaseUrl`**: fixes streams when Jellyfin runs behind a reverse proxy. ([#1](https://github.com/wujekbogdan/jellio-plus/pull/1))\r\n- **Stream `behaviorHints` with OpenSubtitles hash, filename, and file size**: external subtitle addons like OpenSubtitles now get accurate matches instead of falling back to title or IMDB ID. ([#2](https://github.com/wujekbogdan/jellio-plus/pull/2))\r\n- **Switched streaming to HLS**: fixes seeking and the progress bar, enables proper transcoding (passthrough where possible, partial or full only when needed), no more forced stereo downmix. ([#4](https://github.com/wujekbogdan/jellio-plus/pull/4))\r\n- **Stremio addon version reads from the assembly**: was hardcoded to `0.0.1`, now stays in sync with the plugin version automatically. ([#3](https://github.com/wujekbogdan/jellio-plus/pull/3))\r\n- **Rebranded to Jellio++**: `/jellio` routes are now `/jelliopp`, Stremio addon ID changed. Existing installs need to be reinstalled in Stremio. ([#5](https://github.com/wujekbogdan/jellio-plus/pull/5))\r\n\r\n**Full Changelog**: https://github.com/wujekbogdan/jellio-plus/commits/v1.5.0",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/hexSB/jellio-plus-plus-plus/releases/download/v1.5.0/jellio_1.5.0.0.zip",
-                "checksum": "3b92e96bfb9cd5c4572519b082722af5",
-                "timestamp": "2026-05-19T21:26:48Z"
+                "sourceUrl": "https://github.com/hexSB/jellio-plus-plus-plus/releases/download/v1.7.2.0/jellio_1.7.2.0.zip",
+                "checksum": "d3931a4cca2861a38a4e3d20fcdf2855",
+                "timestamp": "2026-06-29T00:50:12Z"
             }
         ]
     }
