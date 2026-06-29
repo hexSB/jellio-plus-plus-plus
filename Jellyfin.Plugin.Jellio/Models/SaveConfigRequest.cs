@@ -10,4 +10,10 @@ public class SaveConfigRequest
     public string? JellyseerrApiKey { get; set; }
     public string? PublicBaseUrl { get; set; }
     public List<string>? SelectedLibraries { get; set; }
+
+    // Transcoding settings
+    public bool EnableDirectStreaming { get; set; } = true;
+    public bool ForceTranscodeVideo { get; set; } = false;
+    public bool ForceTranscodeAudio { get; set; } = false;
+    public int MaxVideoBitrate { get; set; } = 120;
 }

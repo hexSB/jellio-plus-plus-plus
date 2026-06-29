@@ -21,6 +21,11 @@ const storedConfigSchema = z.object({
   jellyseerrUrl: z.string().optional(),
   jellyseerrApiKey: z.string().optional(),
   publicBaseUrl: z.string().optional(),
+  // Transcoding settings
+  enableDirectStreaming: z.boolean().optional(),
+  forceTranscodeVideo: z.boolean().optional(),
+  forceTranscodeAudio: z.boolean().optional(),
+  maxVideoBitrate: z.number().optional(),
 });
 
 type StoredConfig = z.infer<typeof storedConfigSchema>;
@@ -57,6 +62,22 @@ export const useConfigStorage = (
             if (config.publicBaseUrl) {
               form.setValue('publicBaseUrl', config.publicBaseUrl);
             }
+            // Transcoding settings
+            if (config.enableDirectStreaming !== undefined) {
+              form.setValue(
+                'enableDirectStreaming',
+                config.enableDirectStreaming,
+              );
+            }
+            if (config.forceTranscodeVideo !== undefined) {
+              form.setValue('forceTranscodeVideo', config.forceTranscodeVideo);
+            }
+            if (config.forceTranscodeAudio !== undefined) {
+              form.setValue('forceTranscodeAudio', config.forceTranscodeAudio);
+            }
+            if (config.maxVideoBitrate !== undefined) {
+              form.setValue('maxVideoBitrate', config.maxVideoBitrate);
+            }
           }
         }
 
@@ -76,6 +97,28 @@ export const useConfigStorage = (
           }
           if (serverConfig.publicBaseUrl) {
             form.setValue('publicBaseUrl', serverConfig.publicBaseUrl);
+          }
+          // Transcoding settings
+          if (serverConfig.enableDirectStreaming !== undefined) {
+            form.setValue(
+              'enableDirectStreaming',
+              serverConfig.enableDirectStreaming,
+            );
+          }
+          if (serverConfig.forceTranscodeVideo !== undefined) {
+            form.setValue(
+              'forceTranscodeVideo',
+              serverConfig.forceTranscodeVideo,
+            );
+          }
+          if (serverConfig.forceTranscodeAudio !== undefined) {
+            form.setValue(
+              'forceTranscodeAudio',
+              serverConfig.forceTranscodeAudio,
+            );
+          }
+          if (serverConfig.maxVideoBitrate !== undefined) {
+            form.setValue('maxVideoBitrate', serverConfig.maxVideoBitrate);
           }
           if (serverConfig.selectedLibraries && availableLibraries) {
             // Server stores library IDs as 32-char guids without dashes
@@ -114,6 +157,11 @@ export const useConfigStorage = (
         jellyseerrUrl: stripTrailingSlash(values.jellyseerrUrl ?? ''),
         jellyseerrApiKey: values.jellyseerrApiKey,
         publicBaseUrl: stripTrailingSlash(values.publicBaseUrl ?? ''),
+        // Transcoding settings
+        enableDirectStreaming: values.enableDirectStreaming,
+        forceTranscodeVideo: values.forceTranscodeVideo,
+        forceTranscodeAudio: values.forceTranscodeAudio,
+        maxVideoBitrate: values.maxVideoBitrate,
       };
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(config));

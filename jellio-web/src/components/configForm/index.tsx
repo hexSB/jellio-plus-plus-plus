@@ -8,6 +8,7 @@ import {
   ServerNameField,
   JellyseerrFieldset,
   PublicBaseUrlField,
+  TranscodingFieldset,
 } from '@/components/configForm/fields';
 import { formSchema } from '@/components/configForm/formSchema.tsx';
 import { InstallUrlsContainer } from '@/components/configForm/installUrls/InstallUrlsContainer';
@@ -36,6 +37,11 @@ const ConfigForm: FC<Props> = ({ serverInfo }) => {
       jellyseerrUrl: '',
       jellyseerrApiKey: '',
       publicBaseUrl: '',
+      // Transcoding settings
+      enableDirectStreaming: true,
+      forceTranscodeVideo: false,
+      forceTranscodeAudio: false,
+      maxVideoBitrate: 120,
     },
   });
 
@@ -63,6 +69,11 @@ const ConfigForm: FC<Props> = ({ serverInfo }) => {
             values.libraries?.map((lib: { key: string }) =>
               lib.key.replace(/-/g, ''),
             ) ?? [],
+          // Transcoding settings
+          enableDirectStreaming: values.enableDirectStreaming ?? true,
+          forceTranscodeVideo: values.forceTranscodeVideo ?? false,
+          forceTranscodeAudio: values.forceTranscodeAudio ?? false,
+          maxVideoBitrate: values.maxVideoBitrate ?? 120,
         },
         token: serverInfo.accessToken,
       });
@@ -87,6 +98,7 @@ const ConfigForm: FC<Props> = ({ serverInfo }) => {
           libraries={serverInfo.libraries}
         />
         <PublicBaseUrlField form={form} />
+        <TranscodingFieldset form={form} />
         <JellyseerrFieldset form={form} />
         <InstallUrlsContainer form={form} serverInfo={serverInfo} />
         <div className="p-3">
