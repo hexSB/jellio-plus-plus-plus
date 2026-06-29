@@ -49,27 +49,7 @@ public class RequestController : ControllerBase
 
     private static HttpClient CreateHttpClient(string baseUrl, string? apiKey)
     {
-        var client = new HttpClient
-        {
-            BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/")
-        };
-        client.Timeout = TimeSpan.FromSeconds(10);
-        if (!string.IsNullOrWhiteSpace(apiKey))
-        {
-            // API keys from the config are stored in plain text, use directly
-            var msg = $"[Jellyseerr] Using API key: {apiKey.Substring(0, Math.Min(8, apiKey.Length))}... (length: {apiKey.Length})";
-            Console.WriteLine(msg);
-            LogBuffer.AddLog(msg, LogLevel.Info);
-            client.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
-        }
-        else
-        {
-            var msg = "[Jellyseerr] WARNING: No API key provided!";
-            Console.WriteLine(msg);
-            LogBuffer.AddLog(msg, LogLevel.Warning);
-        }
-
-        return client;
+        return JellyseerrHttpClient.Create(baseUrl, apiKey);
     }
 
     [HttpGet]

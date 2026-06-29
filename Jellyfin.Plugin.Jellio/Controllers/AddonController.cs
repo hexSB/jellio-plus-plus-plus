@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.Jellio.Helpers;
 using Jellyfin.Plugin.Jellio.Models;
+using Jellyfin.Plugin.Jellio.Services;
 using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
@@ -73,6 +74,106 @@ public class AddonController : ControllerBase
         }
 
         return null;
+    }
+
+    private async Task<IActionResult> GetJellyseerrFallbackStream(
+        ConfigModel config, string imdbId, string type, int? season = null, int? episode = null)
+    {
+        if (!config.JellyseerrEnabled || string.IsNullOrWhiteSpace(config.JellyseerrUrl))
+            return Ok(new { streams = Array.Empty<object>() });
+
+        var title = await GetTitleFromCinemeta(imdbId, type);
+
+        using var client = JellyseerrHttpClient.Create(config.JellyseerrUrl, config.JellyseerrApiKey);
+        var tmdbId = await JellyseerrStatusService.GetTmdbId(client, imdbId, type, title);
+
+        LogBuffer.AddLog($"[Jellyseerr] IMDB tt{imdbId} -> TMDB {tmdbId?.ToString(CultureInfo.InvariantCulture) ?? "null"}", LogLevel.Info);
+
+        if (tmdbId is null)
+        {
+            return ReturnJellyseerrRequestStream(config, imdbId, type, title, season, episode);
+        }
+
+        var status = await JellyseerrStatusService.GetMediaStatus(client, tmdbId.Value);
+        LogBuffer.AddLog($"[Jellyseerr] Media status for TMDB {tmdbId}: {status}", LogLevel.Info);
+
+        return status switch
+        {
+            "available" => await HandleJellyseerrAvailable(config, imdbId, type, tmdbId.Value, season, episode),
+            "processing" => ReturnStatusStream("🔄 Downloading — tap to refresh", "Content is being downloaded"),
+            "pending" or "partially_available" => ReturnStatusStream("📥 Requested — waiting for download", "Request approved, download pending"),
+            _ => ReturnJellyseerrRequestStream(config, imdbId, type, title, season, episode),
+        };
+    }
+
+    private async Task<IActionResult> HandleJellyseerrAvailable(
+        ConfigModel config, string imdbId, string type, int tmdbId, int? season, int? episode)
+    {
+        var userId = (Guid)HttpContext.Items["JellioUserId"]!;
+        var user = _userManager.GetUserById(userId);
+        if (user == null)
+            return Unauthorized();
+
+        if (type == "movie")
+        {
+            var query = new InternalItemsQuery(user)
+            {
+                HasAnyProviderId = new Dictionary<string, string> { ["Imdb"] = $"tt{imdbId}" },
+                IncludeItemTypes = [BaseItemKind.Movie],
+            };
+            var items = _libraryManager.GetItemList(query);
+            if (items.Count > 0)
+                return GetStreamsResult(userId, items, config.AuthToken, config.PublicBaseUrl);
+        }
+        else
+        {
+            var seriesQuery = new InternalItemsQuery(user)
+            {
+                IncludeItemTypes = [BaseItemKind.Series],
+                HasAnyProviderId = new Dictionary<string, string> { ["Imdb"] = $"tt{imdbId}" },
+            };
+            var seriesItems = _libraryManager.GetItemList(seriesQuery);
+            if (seriesItems.Count > 0 && season.HasValue && episode.HasValue)
+            {
+                var seriesIds = seriesItems.Select(s => s.Id).ToArray();
+                var episodeQuery = new InternalItemsQuery(user)
+                {
+                    IncludeItemTypes = [BaseItemKind.Episode],
+                    AncestorIds = seriesIds,
+                    ParentIndexNumber = season.Value,
+                    IndexNumber = episode.Value,
+                };
+                var episodeItems = _libraryManager.GetItemList(episodeQuery);
+                if (episodeItems.Count > 0)
+                    return GetStreamsResult(userId, episodeItems, config.AuthToken, config.PublicBaseUrl);
+            }
+        }
+
+        return ReturnStatusStream("✅ Available — processing in Jellyfin", "Content downloaded, waiting for library scan");
+    }
+
+    private IActionResult ReturnJellyseerrRequestStream(
+        ConfigModel config, string imdbId, string type, string? title, int? season, int? episode)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            return Ok(new { streams = Array.Empty<object>() });
+
+        var baseUrl = GetBaseUrl(config.PublicBaseUrl);
+        var configStr = Request.RouteValues["config"]?.ToString() ?? "";
+        var url = $"{baseUrl}/jelliopp/{configStr}/jellyseerr?type={type}&imdbId=tt{imdbId}&title={Uri.EscapeDataString(title)}";
+        if (season.HasValue)
+            url += $"&season={season.Value}";
+        if (episode.HasValue)
+            url += $"&episode={episode.Value}";
+
+        var streams = new[] { new { url, name = "📥 Request via Jellyseerr", description = "Click to send request to Jellyseerr" } };
+        return Ok(new { streams });
+    }
+
+    private IActionResult ReturnStatusStream(string name, string description)
+    {
+        var streams = new[] { new { url = "#", name, description } };
+        return Ok(new { streams });
     }
 
     private string GetBaseUrl(string? overrideBaseUrl = null)
@@ -585,23 +686,7 @@ public class AddonController : ControllerBase
 
         if (items.Count == 0)
         {
-            // No local stream found; provide a Jellyseerr request stream if configured
-            if (config.JellyseerrEnabled && !string.IsNullOrWhiteSpace(config.JellyseerrUrl))
-            {
-                var title = await GetTitleFromCinemeta(imdbId, "movie");
-                if (!string.IsNullOrWhiteSpace(title))
-                {
-                    var baseUrl = GetBaseUrl(config.PublicBaseUrl);
-                    var requestUrl = $"{baseUrl}/jelliopp/{Request.RouteValues["config"]}/jellyseerr?type=movie&imdbId=tt{imdbId}&title={Uri.EscapeDataString(title)}";
-                    var streams = new[]
-                    {
-                        new { url = requestUrl, name = "📥 Request via Jellyseerr", description = "Click to send request to Jellyseerr" }
-                    };
-                    return Ok(new { streams });
-                }
-            }
-
-            return Ok(new { streams = Array.Empty<object>() });
+            return await GetJellyseerrFallbackStream(config, imdbId, "movie");
         }
 
         return GetStreamsResult(userId, items, config.AuthToken, config.PublicBaseUrl);
@@ -636,23 +721,7 @@ public class AddonController : ControllerBase
         if (seriesItems.Count == 0)
         {
             LogBuffer.AddLog($"[Stream] Series not found for IMDB tt{imdbId}", LogLevel.Warning);
-            // Series not found - show Jellyseerr option if enabled
-            if (config.JellyseerrEnabled && !string.IsNullOrWhiteSpace(config.JellyseerrUrl))
-            {
-                var title = await GetTitleFromCinemeta(imdbId, "tv");
-                if (!string.IsNullOrWhiteSpace(title))
-                {
-                    var baseUrl = GetBaseUrl(config.PublicBaseUrl);
-                    var requestUrl = $"{baseUrl}/jelliopp/{Request.RouteValues["config"]}/jellyseerr?type=tv&imdbId=tt{imdbId}&title={Uri.EscapeDataString(title)}&season={seasonNum}&episode={episodeNum}";
-                    var streams = new[]
-                    {
-                        new { url = requestUrl, name = "📥 Request via Jellyseerr", description = "Click to send request to Jellyseerr" }
-                    };
-                    return Ok(new { streams });
-                }
-            }
-
-            return Ok(new { streams = Array.Empty<object>() });
+            return await GetJellyseerrFallbackStream(config, imdbId, "tv", seasonNum, episodeNum);
         }
 
         var seriesIds = seriesItems.Select(s => s.Id).ToArray();
@@ -671,23 +740,7 @@ public class AddonController : ControllerBase
         if (episodeItems.Count == 0)
         {
             LogBuffer.AddLog($"[Stream] Episode not found: Season {seasonNum}, Episode {episodeNum}", LogLevel.Warning);
-            // Episode not found - show Jellyseerr option if enabled
-            if (config.JellyseerrEnabled && !string.IsNullOrWhiteSpace(config.JellyseerrUrl))
-            {
-                var title = await GetTitleFromCinemeta(imdbId, "tv");
-                if (!string.IsNullOrWhiteSpace(title))
-                {
-                    var baseUrl = GetBaseUrl(config.PublicBaseUrl);
-                    var requestUrl = $"{baseUrl}/jelliopp/{Request.RouteValues["config"]}/jellyseerr?type=tv&imdbId=tt{imdbId}&title={Uri.EscapeDataString(title)}&season={seasonNum}&episode={episodeNum}";
-                    var streams = new[]
-                    {
-                        new { url = requestUrl, name = "📥 Request via Jellyseerr", description = "Click to send request to Jellyseerr" }
-                    };
-                    return Ok(new { streams });
-                }
-            }
-
-            return Ok(new { streams = Array.Empty<object>() });
+            return await GetJellyseerrFallbackStream(config, imdbId, "tv", seasonNum, episodeNum);
         }
 
         LogBuffer.AddLog($"[Stream] Returning streams for {episodeItems.Count} episode(s)", LogLevel.Info);
