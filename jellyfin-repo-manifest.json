@@ -12,8 +12,8 @@
                 "changelog": "## What's New\n\n### Jellyseerr Download Status\nWhen content is not in your Jellyfin library, the stream list now shows the current download status from Jellyseerr:\n\n- **\ud83d\udce5 Request via Jellyseerr** \u2014 Content not yet requested (click to request)\n- **\ud83d\udce5 Requested \u2014 waiting for download** \u2014 Request approved, download pending\n- **\ud83d\udd04 Downloading \u2014 tap to refresh** \u2014 Content is actively downloading\n- **\u2705 Available \u2014 processing in Jellyfin** \u2014 Downloaded, waiting for library scan\n\n### Improvements\n- TMDB ID caching (24h) reduces redundant Jellyseerr search API calls\n- Shared HTTP client factory for Jellyseerr requests\n- Automatic re-check of Jellyfin library when Jellyseerr reports content as available\n\n### Bug Fixes\n- Removed AV1 from direct streaming codecs (Stremio web player compatibility)\n\n### Commits since v1.7.2.0\n- feat(jellyseerr): show download status in Stremio stream list\n- Add Jellio++ (wujekbogdan) to fork history\n- Rename to Jellio+++ and update manifest URL\n- fix: remove AV1 from direct streaming codecs\n- feat: add transcoding settings with direct streaming support\n- feat(subtitles): serve text subtitles from Jellyfin to Stremio",
                 "targetAbi": "12.0.0.0",
                 "sourceUrl": "https://github.com/hexSB/jellio-plus-plus-plus/releases/download/v1.8.0.0/jellio_1.8.0.0.zip",
-                "checksum": "9b07efc6977a450caefc509bc6345cb4",
-                "timestamp": "2026-06-29T20:47:55Z"
+                "checksum": "d1d738f8ac7f141c0e7ddca64aadd6f6",
+                "timestamp": "2026-06-29T20:48:03Z"
             },
             {
                 "version": "1.7.2.0",
