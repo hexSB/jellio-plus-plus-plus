@@ -7,7 +7,8 @@ Stream your Jellyfin library directly in Stremio with seamless integration.
 
 - [**Jellio**](https://github.com/vanchaxy/jellio) by [Vanchaxy](https://github.com/vanchaxy) - the original Jellyfin↔Stremio bridge.
 - [**Jellio+**](https://github.com/InfiniteAvenger/jellio-plus) by [InfiniteAvenger](https://github.com/InfiniteAvenger) - fork adding Jellyfin 10.11.x support.
-- **Jellio+++** - this fork. Rewritten plugin UI, HLS streaming, transcoding controls, subtitle support, and Jellyfin 12 compatibility.
+- [**Jellio++**](https://github.com/wujekbogdan/jellio-plus-plus) by [wujekbogdan](https://github.com/wujekbogdan) - adds HLS streaming, OpenSubtitles hashes, and public base URL support.
+- **Jellio+++** - this fork. Rewritten plugin UI, transcoding controls, subtitle support, and Jellyfin 12 compatibility.
 
 Every fork gets another `+`. We don't make the rules.
 
