@@ -25,6 +25,24 @@ const DEFAULT_VALUES = {
 };
 
 export const TranscodingFieldset: FC<Props> = ({ form }) => {
+  const enableDirectStreaming = form.watch('enableDirectStreaming');
+  const forceTranscodeVideo = form.watch('forceTranscodeVideo');
+  const forceTranscodeAudio = form.watch('forceTranscodeAudio');
+
+  const playbackMode =
+    forceTranscodeVideo || forceTranscodeAudio
+      ? 'Forced Jellyfin transcoding'
+      : enableDirectStreaming
+        ? 'Adaptive: direct/remux first, Jellyfin fallback'
+        : 'Jellyfin compatibility transcode';
+
+  const playbackModeDescription =
+    forceTranscodeVideo || forceTranscodeAudio
+      ? 'Jellyfin will re-encode the selected media tracks even when direct streaming might work.'
+      : enableDirectStreaming
+        ? 'Jellyfin will copy/remux compatible tracks first, then transcode unsupported tracks when needed.'
+        : 'Jellyfin will request H.264/AAC output instead of preserving original codecs.';
+
   const handleReset = () => {
     form.setValue(
       'enableDirectStreaming',
@@ -38,7 +56,7 @@ export const TranscodingFieldset: FC<Props> = ({ form }) => {
   return (
     <div className="rounded-lg border p-2 space-y-2">
       <div className="flex items-center justify-between">
-        <Label className="text-base">Transcoding Settings</Label>
+        <Label className="text-base">Playback Strategy</Label>
         <Button
           type="button"
           variant="ghost"
@@ -46,8 +64,13 @@ export const TranscodingFieldset: FC<Props> = ({ form }) => {
           onClick={handleReset}
           className="text-xs"
         >
-          Reset to Defaults
+          Reset to Recommended
         </Button>
+      </div>
+
+      <div className="rounded-md border bg-muted/40 px-3 py-2 text-sm">
+        <p className="font-medium">{playbackMode}</p>
+        <p className="text-muted-foreground">{playbackModeDescription}</p>
       </div>
 
       <FormField
@@ -56,11 +79,13 @@ export const TranscodingFieldset: FC<Props> = ({ form }) => {
         render={({ field }) => (
           <FormItem className="flex items-center justify-between py-2">
             <div className="flex-1">
-              <FormLabel>Enable Direct Streaming</FormLabel>
+              <FormLabel>
+                Prefer direct stream/remux with Jellyfin fallback
+              </FormLabel>
               <FormDescription>
-                Preserves original video quality when possible. Recommended for
-                most users. When enabled, Jellyfin will copy compatible video
-                codecs (AV1, HEVC, H.264) directly without re-encoding.
+                This is not direct-only. Jellyfin copies compatible HEVC/H.264
+                video and Opus/EAC3/AAC audio when possible, then transcodes
+                unsupported tracks if playback needs it.
               </FormDescription>
             </div>
             <FormControl>
@@ -80,11 +105,11 @@ export const TranscodingFieldset: FC<Props> = ({ form }) => {
         render={({ field }) => (
           <FormItem className="flex items-center justify-between py-2">
             <div className="flex-1">
-              <FormLabel>Force Video Transcoding</FormLabel>
+              <FormLabel>Always transcode video in Jellyfin</FormLabel>
               <FormDescription>
-                Use for content that won't play directly. Overrides direct
-                streaming and forces all video to be transcoded to H.264. Enable
-                this if you experience playback issues with certain video files.
+                Forces Jellyfin to re-encode video to H.264. Use this as a
+                compatibility fallback, not when testing direct streaming
+                quality.
               </FormDescription>
             </div>
             <FormControl>
@@ -104,11 +129,10 @@ export const TranscodingFieldset: FC<Props> = ({ form }) => {
         render={({ field }) => (
           <FormItem className="flex items-center justify-between py-2">
             <div className="flex-1">
-              <FormLabel>Force Audio Transcoding</FormLabel>
+              <FormLabel>Always transcode audio in Jellyfin</FormLabel>
               <FormDescription>
-                Use for content with audio issues. Transcodes all audio to AAC.
-                Enable this if you experience audio playback problems or if your
-                client doesn't support the source audio codec.
+                Forces Jellyfin to re-encode audio to AAC. Use this if your
+                device has audio issues with the original track.
               </FormDescription>
             </div>
             <FormControl>
@@ -128,7 +152,9 @@ export const TranscodingFieldset: FC<Props> = ({ form }) => {
         render={({ field }) => (
           <FormItem className="py-2">
             <div className="flex items-center justify-between">
-              <FormLabel>Max Video Bitrate: {field.value} Mbps</FormLabel>
+              <FormLabel>
+                Jellyfin video bitrate ceiling: {field.value} Mbps
+              </FormLabel>
             </div>
             <FormControl>
               <input
@@ -142,9 +168,9 @@ export const TranscodingFieldset: FC<Props> = ({ form }) => {
               />
             </FormControl>
             <FormDescription>
-              Higher values preserve more quality but require more bandwidth.
-              Default is 120 Mbps. Reduce this if you have slow network
-              connections.
+              A low ceiling can trigger Jellyfin transcoding even when direct
+              streaming is preferred. Use a high value for quality testing, then
+              lower it only if the network buffers.
             </FormDescription>
             <FormMessage />
           </FormItem>
