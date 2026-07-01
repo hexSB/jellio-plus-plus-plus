@@ -8,6 +8,14 @@
         "category": "General",
         "versions": [
             {
+                "version": "1.9.5.0",
+                "changelog": "- Log the expected Jellyfin stream mode for generated Stremio streams, including whether transcoding is expected or direct stream/remux is expected.\n- Include adaptive-mode reasons such as forced 4K AV1 transcoding, unsupported codecs, forced modes, disabled transcoding warnings, and max bitrate limits.",
+                "targetAbi": "12.0.0.0",
+                "sourceUrl": "https://github.com/hexSB/jellio-plus-plus-plus/releases/download/v1.9.5.0/jellio_1.9.5.0.zip",
+                "checksum": "9211eaee42ae366a356427aca77f4a96",
+                "timestamp": "2026-07-01T10:16:51Z"
+            },
+            {
                 "version": "1.9.4.0",
                 "changelog": "Fix forced transcode negotiation.\\n\\n- Disable direct play/direct stream when video or audio forced transcode is selected.\\n- Keep stream copy disabled for forced modes so Jellyfin cannot fall back to AV1/Opus copy.\\n- Add tests for direct playback flag behavior.",
                 "targetAbi": "12.0.0.0",
