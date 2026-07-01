@@ -8,6 +8,14 @@
         "category": "General",
         "versions": [
             {
+                "version": "1.9.2.0",
+                "changelog": "Patch release.\\n\\n- Fix Jellyfin settings redirect for /web/index.html so Jellio opens /jelliopp/configure instead of Jellyfin home.",
+                "targetAbi": "12.0.0.0",
+                "sourceUrl": "https://github.com/hexSB/jellio-plus-plus-plus/releases/download/v1.9.2.0/jellio_1.9.2.0.zip",
+                "checksum": "688a8d56adb2bd6f6f93a3f7d20ae224",
+                "timestamp": "2026-07-01T06:53:02Z"
+            },
+            {
                 "version": "1.9.1.0",
                 "changelog": "Fix adaptive video transcoding so only 4K AV1 is forced through Jellyfin transcoding based on Stremio verification results.\n\n- Adaptive mode transcodes 4K AV1 to H.264.\n- 1080p AV1 remains a direct/remux candidate.\n- 4K HEVC and 4K AVC remain direct/remux candidates.\n- No-transcode mode continues to disable video playback transcoding, including unsupported formats.",
                 "targetAbi": "12.0.0.0",
