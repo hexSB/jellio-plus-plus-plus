@@ -12,8 +12,8 @@
                 "changelog": "## Changes\n- Add explicit video and audio transcoding modes: Adaptive, Force transcode, and No transcode.\n- Preserve legacy transcoding booleans while persisting the new mode fields.\n- Pass separate video/audio transcoding and stream-copy flags to Jellyfin HLS URLs.\n- Update README transcoding settings documentation.",
                 "targetAbi": "12.0.0.0",
                 "sourceUrl": "https://github.com/hexSB/jellio-plus-plus-plus/releases/download/v1.9.0.0/jellio_1.9.0.0.zip",
-                "checksum": "0afed2d135e230a62cc46c1ac86b4013",
-                "timestamp": "2026-07-01T05:36:22Z"
+                "checksum": "961063ccaa2bdd01d0593f8df7f8df82",
+                "timestamp": "2026-07-01T05:36:28Z"
             },
             {
                 "version": "1.8.0.0",
