@@ -77,6 +77,22 @@ public class AddonControllerTranscodingTests
         Assert.Equal(["aac"], codecs);
     }
 
+    [Theory]
+    [InlineData("adaptive", "adaptive", true)]
+    [InlineData("disabled", "disabled", true)]
+    [InlineData("force", "adaptive", false)]
+    [InlineData("adaptive", "force", false)]
+    [InlineData("force", "force", false)]
+    public void ShouldEnableDirectPlayback_DisablesDirectPlaybackForForcedModes(
+        string videoMode,
+        string audioMode,
+        bool expected)
+    {
+        var enabled = AddonController.ShouldEnableDirectPlayback(videoMode, audioMode);
+
+        Assert.Equal(expected, enabled);
+    }
+
     private static MediaSourceInfo CreateSource(
         string codec,
         int width,

@@ -299,6 +299,12 @@ public class AddonController : ControllerBase
         return ["aac", "mp3", "ac3", "eac3", "flac", "opus"];
     }
 
+    internal static bool ShouldEnableDirectPlayback(string videoTranscodingMode, string audioTranscodingMode)
+    {
+        return videoTranscodingMode != TranscodingModeForce
+            && audioTranscodingMode != TranscodingModeForce;
+    }
+
     internal static bool ShouldForceAdaptiveAv1Transcode(MediaSourceInfo source)
     {
         var videoStream = source.MediaStreams
@@ -469,6 +475,7 @@ public class AddonController : ControllerBase
                 var allowAudioStreamCopy = audioTranscodingMode != TranscodingModeForce;
                 var enableVideoPlaybackTranscoding = videoTranscodingMode != TranscodingModeDisabled;
                 var enableAudioPlaybackTranscoding = audioTranscodingMode != TranscodingModeDisabled;
+                var enableDirectPlayback = ShouldEnableDirectPlayback(videoTranscodingMode, audioTranscodingMode);
 
                 var audioCodecs = GetAudioCodecs(audioTranscodingMode);
 
@@ -481,8 +488,8 @@ public class AddonController : ControllerBase
                         ["api_key"] = authToken,
                         ["videoCodec"] = string.Join(',', videoCodecs),
                         ["audioCodec"] = string.Join(',', audioCodecs),
-                        ["enableDirectPlay"] = "true",
-                        ["enableDirectStream"] = "true",
+                        ["enableDirectPlay"] = enableDirectPlayback ? "true" : "false",
+                        ["enableDirectStream"] = enableDirectPlayback ? "true" : "false",
                         ["enableVideoPlaybackTranscoding"] = enableVideoPlaybackTranscoding ? "true" : "false",
                         ["enableAudioPlaybackTranscoding"] = enableAudioPlaybackTranscoding ? "true" : "false",
                         ["allowVideoStreamCopy"] = allowVideoStreamCopy ? "true" : "false",
