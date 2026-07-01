@@ -286,7 +286,17 @@ public class AddonController : ControllerBase
         return videoTranscodingMode == TranscodingModeAdaptive
             && ShouldForceAdaptiveAv1Transcode(source)
             ? ["h264"]
-            : ["hevc", "h264", "av1"];
+            : ["h264", "hevc", "av1"];
+    }
+
+    internal static string[] GetAudioCodecs(string audioTranscodingMode)
+    {
+        if (audioTranscodingMode == TranscodingModeForce)
+        {
+            return ["aac"];
+        }
+
+        return ["aac", "mp3", "ac3", "eac3", "flac", "opus"];
     }
 
     internal static bool ShouldForceAdaptiveAv1Transcode(MediaSourceInfo source)
@@ -438,10 +448,10 @@ public class AddonController : ControllerBase
                  * Adaptive mode preserves original quality when possible.
                  * Jellyfin transcodes unsupported tracks only when the matching
                  * video/audio transcoding mode allows it.
-                 * Video codecs: AV1 up to 1080p, HEVC, H.264
-                 * Audio codecs: OPUS, EAC3, AAC (Stremio supports OPUS on desktop)
+                 * Video codecs: H.264, HEVC, AV1 up to 1080p
+                 * Audio codecs keep AAC first so unsupported tracks such as
+                 * TRUEHD transcode to a TV-safe fallback instead of Opus.
                  */
-                string[] audioCodecs;
 
                 var pluginConfig = Plugin.Instance?.Configuration;
                 var enableDirectStreaming = pluginConfig?.EnableDirectStreaming ?? true;
@@ -460,16 +470,7 @@ public class AddonController : ControllerBase
                 var enableVideoPlaybackTranscoding = videoTranscodingMode != TranscodingModeDisabled;
                 var enableAudioPlaybackTranscoding = audioTranscodingMode != TranscodingModeDisabled;
 
-                if (audioTranscodingMode == TranscodingModeForce)
-                {
-                    // Force audio transcoding
-                    audioCodecs = ["aac"];
-                }
-                else
-                {
-                    // Support modern audio codecs
-                    audioCodecs = ["opus", "eac3", "aac"];
-                }
+                var audioCodecs = GetAudioCodecs(audioTranscodingMode);
 
                 return streamChoices.Select(audioStream =>
                 {
@@ -486,7 +487,6 @@ public class AddonController : ControllerBase
                         ["enableAudioPlaybackTranscoding"] = enableAudioPlaybackTranscoding ? "true" : "false",
                         ["allowVideoStreamCopy"] = allowVideoStreamCopy ? "true" : "false",
                         ["allowAudioStreamCopy"] = allowAudioStreamCopy ? "true" : "false",
-                        ["maxAudioChannels"] = "6",
                         ["videoBitRate"] = $"{maxVideoBitrate * 1000000}",
                         ["maxWidth"] = "3840",
                         ["maxHeight"] = "2160",

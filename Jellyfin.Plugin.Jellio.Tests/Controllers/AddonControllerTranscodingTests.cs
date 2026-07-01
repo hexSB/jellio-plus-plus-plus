@@ -24,7 +24,7 @@ public class AddonControllerTranscodingTests
 
         var codecs = AddonController.GetVideoCodecs(source, "disabled");
 
-        Assert.Equal(["hevc", "h264", "av1"], codecs);
+        Assert.Equal(["h264", "hevc", "av1"], codecs);
         Assert.True(AddonController.ShouldForceAdaptiveAv1Transcode(source));
     }
 
@@ -35,7 +35,7 @@ public class AddonControllerTranscodingTests
 
         var codecs = AddonController.GetVideoCodecs(source, "adaptive");
 
-        Assert.Equal(["hevc", "h264", "av1"], codecs);
+        Assert.Equal(["h264", "hevc", "av1"], codecs);
         Assert.False(AddonController.ShouldForceAdaptiveAv1Transcode(source));
     }
 
@@ -46,7 +46,7 @@ public class AddonControllerTranscodingTests
 
         var codecs = AddonController.GetVideoCodecs(source, "adaptive");
 
-        Assert.Equal(["hevc", "h264", "av1"], codecs);
+        Assert.Equal(["h264", "hevc", "av1"], codecs);
         Assert.False(AddonController.ShouldForceAdaptiveAv1Transcode(source));
     }
 
@@ -57,8 +57,24 @@ public class AddonControllerTranscodingTests
 
         var codecs = AddonController.GetVideoCodecs(source, "adaptive");
 
-        Assert.Equal(["hevc", "h264", "av1"], codecs);
+        Assert.Equal(["h264", "hevc", "av1"], codecs);
         Assert.False(AddonController.ShouldForceAdaptiveAv1Transcode(source));
+    }
+
+    [Fact]
+    public void GetAudioCodecs_Adaptive_PrefersAacFallbackBeforeOpus()
+    {
+        var codecs = AddonController.GetAudioCodecs("adaptive");
+
+        Assert.Equal(["aac", "mp3", "ac3", "eac3", "flac", "opus"], codecs);
+    }
+
+    [Fact]
+    public void GetAudioCodecs_Force_UsesAacOnly()
+    {
+        var codecs = AddonController.GetAudioCodecs("force");
+
+        Assert.Equal(["aac"], codecs);
     }
 
     private static MediaSourceInfo CreateSource(
