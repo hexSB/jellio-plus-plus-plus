@@ -93,14 +93,72 @@ public class AddonControllerTranscodingTests
         Assert.Equal(expected, enabled);
     }
 
+    [Fact]
+    public void DescribeJellyfinStreamMode_AdaptiveSupportedCodecs_ReportsDirectStream()
+    {
+        var source = CreateSource("h264", width: 1920, height: 1080, audioCodec: "aac");
+        var audioStream = source.MediaStreams.First(stream => stream.Type == MediaStreamType.Audio);
+
+        var mode = AddonController.DescribeJellyfinStreamMode(source, audioStream, "adaptive", "adaptive", 120);
+
+        Assert.Equal("Direct stream/remux expected (no Jellyfin transcoding)", mode);
+    }
+
+    [Fact]
+    public void DescribeJellyfinStreamMode_Adaptive4KAv1_ReportsVideoTranscode()
+    {
+        var source = CreateSource("av1", width: 3840, height: 2160, audioCodec: "aac");
+        var audioStream = source.MediaStreams.First(stream => stream.Type == MediaStreamType.Audio);
+
+        var mode = AddonController.DescribeJellyfinStreamMode(source, audioStream, "adaptive", "adaptive", 120);
+
+        Assert.Equal("Transcoding expected (video 4K AV1 forced to H.264)", mode);
+    }
+
+    [Fact]
+    public void DescribeJellyfinStreamMode_ForcedVideoAndAudio_ReportsTranscode()
+    {
+        var source = CreateSource("h264", width: 1920, height: 1080, audioCodec: "aac");
+        var audioStream = source.MediaStreams.First(stream => stream.Type == MediaStreamType.Audio);
+
+        var mode = AddonController.DescribeJellyfinStreamMode(source, audioStream, "force", "force", 120);
+
+        Assert.Equal("Transcoding expected (video forced to H.264; audio forced to AAC)", mode);
+    }
+
+    [Fact]
+    public void DescribeJellyfinStreamMode_AdaptiveHighBitrate_ReportsTranscode()
+    {
+        var source = CreateSource("h264", width: 3840, height: 2160, audioCodec: "aac", bitrate: 140000000);
+        var audioStream = source.MediaStreams.First(stream => stream.Type == MediaStreamType.Audio);
+
+        var mode = AddonController.DescribeJellyfinStreamMode(source, audioStream, "adaptive", "adaptive", 120);
+
+        Assert.Equal("Transcoding expected (source bitrate 140 Mbps exceeds max 120 Mbps)", mode);
+    }
+
+    [Fact]
+    public void DescribeJellyfinStreamMode_DisabledUnsupportedAudio_ReportsNoTranscodeWarning()
+    {
+        var source = CreateSource("h264", width: 1920, height: 1080, audioCodec: "truehd");
+        var audioStream = source.MediaStreams.First(stream => stream.Type == MediaStreamType.Audio);
+
+        var mode = AddonController.DescribeJellyfinStreamMode(source, audioStream, "disabled", "disabled", 120);
+
+        Assert.Equal("No transcoding requested (audio transcoding disabled; unsupported codec truehd may fail)", mode);
+    }
+
     private static MediaSourceInfo CreateSource(
         string codec,
         int width,
         int height,
-        int? bitDepth = null)
+        int? bitDepth = null,
+        string? audioCodec = null,
+        int? bitrate = null)
     {
         return new MediaSourceInfo
         {
+            Bitrate = bitrate,
             MediaStreams =
             [
                 new MediaStream
@@ -110,6 +168,12 @@ public class AddonControllerTranscodingTests
                     Width = width,
                     Height = height,
                     BitDepth = bitDepth,
+                },
+                new MediaStream
+                {
+                    Type = MediaStreamType.Audio,
+                    Codec = audioCodec ?? "aac",
+                    Index = 1,
                 },
             ],
         };

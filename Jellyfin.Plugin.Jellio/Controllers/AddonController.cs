@@ -325,6 +325,138 @@ public class AddonController : ControllerBase
             || string.Equals(codec, "av01", StringComparison.OrdinalIgnoreCase);
     }
 
+    internal static string DescribeJellyfinStreamMode(
+        MediaSourceInfo source,
+        MediaStream? audioStream,
+        string videoTranscodingMode,
+        string audioTranscodingMode,
+        int maxVideoBitrate)
+    {
+        var transcodeReasons = GetExpectedTranscodeReasons(
+            source,
+            audioStream,
+            videoTranscodingMode,
+            audioTranscodingMode,
+            maxVideoBitrate);
+
+        if (transcodeReasons.Count > 0)
+        {
+            return $"Transcoding expected ({string.Join("; ", transcodeReasons)})";
+        }
+
+        var noTranscodeNotes = GetNoTranscodeNotes(source, audioStream, videoTranscodingMode, audioTranscodingMode);
+        if (noTranscodeNotes.Count > 0)
+        {
+            return $"No transcoding requested ({string.Join("; ", noTranscodeNotes)})";
+        }
+
+        return "Direct stream/remux expected (no Jellyfin transcoding)";
+    }
+
+    private static List<string> GetExpectedTranscodeReasons(
+        MediaSourceInfo source,
+        MediaStream? audioStream,
+        string videoTranscodingMode,
+        string audioTranscodingMode,
+        int maxVideoBitrate)
+    {
+        var reasons = new List<string>();
+        var videoStream = source.MediaStreams
+            .FirstOrDefault(stream => stream.Type == MediaStreamType.Video);
+
+        if (videoTranscodingMode == TranscodingModeForce)
+        {
+            reasons.Add("video forced to H.264");
+        }
+        else if (videoTranscodingMode == TranscodingModeAdaptive)
+        {
+            if (ShouldForceAdaptiveAv1Transcode(source))
+            {
+                reasons.Add("video 4K AV1 forced to H.264");
+            }
+            else if (!IsCodecAllowed(videoStream?.Codec, GetVideoCodecs(source, videoTranscodingMode)))
+            {
+                reasons.Add($"video codec {FormatCodec(videoStream?.Codec)} is not in the allowed copy list");
+            }
+            else if (source.Bitrate.HasValue && source.Bitrate.Value > maxVideoBitrate * 1000000)
+            {
+                reasons.Add($"source bitrate {FormatBitrate(source.Bitrate.Value)} exceeds max {maxVideoBitrate} Mbps");
+            }
+        }
+
+        if (audioTranscodingMode == TranscodingModeForce)
+        {
+            reasons.Add("audio forced to AAC");
+        }
+        else if (audioTranscodingMode == TranscodingModeAdaptive
+            && audioStream != null
+            && !IsCodecAllowed(audioStream.Codec, GetAudioCodecs(audioTranscodingMode)))
+        {
+            reasons.Add($"audio codec {FormatCodec(audioStream.Codec)} is not in the allowed copy list");
+        }
+
+        return reasons;
+    }
+
+    private static List<string> GetNoTranscodeNotes(
+        MediaSourceInfo source,
+        MediaStream? audioStream,
+        string videoTranscodingMode,
+        string audioTranscodingMode)
+    {
+        var notes = new List<string>();
+        var videoStream = source.MediaStreams
+            .FirstOrDefault(stream => stream.Type == MediaStreamType.Video);
+
+        if (videoTranscodingMode == TranscodingModeDisabled
+            && !IsCodecAllowed(videoStream?.Codec, GetVideoCodecs(source, videoTranscodingMode)))
+        {
+            notes.Add($"video transcoding disabled; unsupported codec {FormatCodec(videoStream?.Codec)} may fail");
+        }
+
+        if (audioTranscodingMode == TranscodingModeDisabled
+            && audioStream != null
+            && !IsCodecAllowed(audioStream.Codec, GetAudioCodecs(audioTranscodingMode)))
+        {
+            notes.Add($"audio transcoding disabled; unsupported codec {FormatCodec(audioStream.Codec)} may fail");
+        }
+
+        return notes;
+    }
+
+    private static bool IsCodecAllowed(string? codec, IEnumerable<string> allowedCodecs)
+    {
+        if (string.IsNullOrWhiteSpace(codec))
+        {
+            return true;
+        }
+
+        var normalizedCodec = NormalizeCodec(codec);
+        return allowedCodecs.Any(allowedCodec => NormalizeCodec(allowedCodec) == normalizedCodec);
+    }
+
+    private static string NormalizeCodec(string codec)
+    {
+        return codec.Trim().ToLowerInvariant() switch
+        {
+            "avc" or "avc1" => "h264",
+            "h265" or "hev1" or "hvc1" => "hevc",
+            "av01" => "av1",
+            "mp4a" => "aac",
+            _ => codec.Trim().ToLowerInvariant(),
+        };
+    }
+
+    private static string FormatCodec(string? codec)
+    {
+        return string.IsNullOrWhiteSpace(codec) ? "unknown" : codec;
+    }
+
+    private static string FormatBitrate(int bitrate)
+    {
+        return (bitrate / 1000000D).ToString("0.##", CultureInfo.InvariantCulture) + " Mbps";
+    }
+
     private static MetaDto MapToMeta(
         BaseItemDto dto,
         StremioType stremioType,
@@ -520,6 +652,14 @@ public class AddonController : ControllerBase
 
                     var targetAudio = DescribeAudioTarget(audioTranscodingMode);
                     LogBuffer.AddLog($"[Stream]   Target audio: {audioLabel} ({targetAudio})", LogLevel.Info);
+
+                    var jellyfinStreamMode = DescribeJellyfinStreamMode(
+                        source,
+                        audioStream,
+                        videoTranscodingMode,
+                        audioTranscodingMode,
+                        maxVideoBitrate);
+                    LogBuffer.AddLog($"[Stream]   Jellyfin mode: {jellyfinStreamMode}", LogLevel.Info);
 
                     LogBuffer.AddLog($"[Stream]   URL: {streamUrl}", LogLevel.Info);
 
