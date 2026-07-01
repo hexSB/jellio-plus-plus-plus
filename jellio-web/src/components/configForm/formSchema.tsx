@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+export const transcodingModeSchema = z.enum(['adaptive', 'force', 'disabled']);
+
 export const formSchema = z.object({
   serverName: z.string(),
   libraries: z.array(
@@ -14,6 +16,8 @@ export const formSchema = z.object({
   jellyseerrApiKey: z.string().default(''),
   publicBaseUrl: z.string().url().or(z.literal('')).default(''),
   // Transcoding settings
+  videoTranscodingMode: transcodingModeSchema.default('adaptive'),
+  audioTranscodingMode: transcodingModeSchema.default('adaptive'),
   enableDirectStreaming: z.boolean().default(true),
   forceTranscodeVideo: z.boolean().default(false),
   forceTranscodeAudio: z.boolean().default(false),

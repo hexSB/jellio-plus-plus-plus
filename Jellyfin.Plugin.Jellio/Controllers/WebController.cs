@@ -20,6 +20,10 @@ namespace Jellyfin.Plugin.Jellio.Controllers;
 [Route("jelliopp")]
 public class WebController : ControllerBase
 {
+    private const string TranscodingModeAdaptive = "adaptive";
+    private const string TranscodingModeForce = "force";
+    private const string TranscodingModeDisabled = "disabled";
+
     private readonly IUserManager _userManager;
     private readonly IUserViewManager _userViewManager;
     private readonly IDtoService _dtoService;
@@ -43,6 +47,36 @@ public class WebController : ControllerBase
         _serverApplicationHost = serverApplicationHost;
         _deviceManager = deviceManager;
         _sessionManager = sessionManager;
+    }
+
+    private static string NormalizeVideoTranscodingMode(
+        string? mode,
+        bool forceTranscodeVideo,
+        bool enableDirectStreaming)
+    {
+        if (IsSupportedTranscodingMode(mode))
+        {
+            return mode!;
+        }
+
+        return forceTranscodeVideo || !enableDirectStreaming
+            ? TranscodingModeForce
+            : TranscodingModeAdaptive;
+    }
+
+    private static string NormalizeAudioTranscodingMode(string? mode, bool forceTranscodeAudio)
+    {
+        if (IsSupportedTranscodingMode(mode))
+        {
+            return mode!;
+        }
+
+        return forceTranscodeAudio ? TranscodingModeForce : TranscodingModeAdaptive;
+    }
+
+    private static bool IsSupportedTranscodingMode(string? mode)
+    {
+        return mode is TranscodingModeAdaptive or TranscodingModeForce or TranscodingModeDisabled;
     }
 
     [HttpGet]
@@ -144,12 +178,22 @@ public class WebController : ControllerBase
                 jellyseerrApiKey = string.Empty,
                 publicBaseUrl = string.Empty,
                 selectedLibraries = Array.Empty<string>(),
+                videoTranscodingMode = TranscodingModeAdaptive,
+                audioTranscodingMode = TranscodingModeAdaptive,
                 enableDirectStreaming = true,
                 forceTranscodeVideo = false,
                 forceTranscodeAudio = false,
                 maxVideoBitrate = 120
             });
         }
+
+        var videoTranscodingMode = NormalizeVideoTranscodingMode(
+            config.VideoTranscodingMode,
+            config.ForceTranscodeVideo,
+            config.EnableDirectStreaming);
+        var audioTranscodingMode = NormalizeAudioTranscodingMode(
+            config.AudioTranscodingMode,
+            config.ForceTranscodeAudio);
 
         return Ok(new
         {
@@ -158,6 +202,8 @@ public class WebController : ControllerBase
             jellyseerrApiKey = config.JellyseerrApiKey,
             publicBaseUrl = config.PublicBaseUrl,
             selectedLibraries = config.SelectedLibraries?.Select(g => g.ToString("N")).ToArray() ?? Array.Empty<string>(),
+            videoTranscodingMode,
+            audioTranscodingMode,
             enableDirectStreaming = config.EnableDirectStreaming,
             forceTranscodeVideo = config.ForceTranscodeVideo,
             forceTranscodeAudio = config.ForceTranscodeAudio,
@@ -211,9 +257,19 @@ public class WebController : ControllerBase
         }
 
         // Save transcoding settings
-        config.EnableDirectStreaming = request.EnableDirectStreaming;
-        config.ForceTranscodeVideo = request.ForceTranscodeVideo;
-        config.ForceTranscodeAudio = request.ForceTranscodeAudio;
+        var videoTranscodingMode = NormalizeVideoTranscodingMode(
+            request.VideoTranscodingMode,
+            request.ForceTranscodeVideo,
+            request.EnableDirectStreaming);
+        var audioTranscodingMode = NormalizeAudioTranscodingMode(
+            request.AudioTranscodingMode,
+            request.ForceTranscodeAudio);
+
+        config.VideoTranscodingMode = videoTranscodingMode;
+        config.AudioTranscodingMode = audioTranscodingMode;
+        config.EnableDirectStreaming = videoTranscodingMode != TranscodingModeForce;
+        config.ForceTranscodeVideo = videoTranscodingMode == TranscodingModeForce;
+        config.ForceTranscodeAudio = audioTranscodingMode == TranscodingModeForce;
         config.MaxVideoBitrate = request.MaxVideoBitrate;
 
         Plugin.Instance.SaveConfiguration();

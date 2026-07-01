@@ -30,6 +30,10 @@ namespace Jellyfin.Plugin.Jellio.Controllers;
 [Produces(MediaTypeNames.Application.Json)]
 public class AddonController : ControllerBase
 {
+    private const string TranscodingModeAdaptive = "adaptive";
+    private const string TranscodingModeForce = "force";
+    private const string TranscodingModeDisabled = "disabled";
+
     private static readonly string PluginVersion =
         Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
 
@@ -222,6 +226,56 @@ public class AddonController : ControllerBase
         return parts.Count == 0 ? $"Audio track {audioStream.Index}" : string.Join(" - ", parts);
     }
 
+    private static string NormalizeVideoTranscodingMode(
+        string? mode,
+        bool forceTranscodeVideo,
+        bool enableDirectStreaming)
+    {
+        if (IsSupportedTranscodingMode(mode))
+        {
+            return mode!;
+        }
+
+        return forceTranscodeVideo || !enableDirectStreaming
+            ? TranscodingModeForce
+            : TranscodingModeAdaptive;
+    }
+
+    private static string NormalizeAudioTranscodingMode(string? mode, bool forceTranscodeAudio)
+    {
+        if (IsSupportedTranscodingMode(mode))
+        {
+            return mode!;
+        }
+
+        return forceTranscodeAudio ? TranscodingModeForce : TranscodingModeAdaptive;
+    }
+
+    private static bool IsSupportedTranscodingMode(string? mode)
+    {
+        return mode is TranscodingModeAdaptive or TranscodingModeForce or TranscodingModeDisabled;
+    }
+
+    private static string DescribeVideoTarget(string mode)
+    {
+        return mode switch
+        {
+            TranscodingModeForce => "H.264 (forced transcode)",
+            TranscodingModeDisabled => "Direct stream only",
+            _ => "Adaptive direct stream/transcode",
+        };
+    }
+
+    private static string DescribeAudioTarget(string mode)
+    {
+        return mode switch
+        {
+            TranscodingModeForce => "AAC (forced transcode)",
+            TranscodingModeDisabled => "direct stream only",
+            _ => "adaptive direct stream/transcode",
+        };
+    }
+
     private static MetaDto MapToMeta(
         BaseItemDto dto,
         StremioType stremioType,
@@ -348,8 +402,9 @@ public class AddonController : ControllerBase
                 }).ToList();
 
                 /*
-                 * Enable direct streaming to preserve original video quality when possible.
-                 * Jellyfin will only transcode what the client cannot decode.
+                 * Adaptive mode preserves original quality when possible.
+                 * Jellyfin transcodes unsupported tracks only when the matching
+                 * video/audio transcoding mode allows it.
                  * Video codecs: HEVC, H.264 (AV1 removed - Stremio web player doesn't decode it properly)
                  * Audio codecs: OPUS, EAC3, AAC (Stremio supports OPUS on desktop)
                  */
@@ -361,26 +416,33 @@ public class AddonController : ControllerBase
                 var forceTranscodeVideo = pluginConfig?.ForceTranscodeVideo ?? false;
                 var forceTranscodeAudio = pluginConfig?.ForceTranscodeAudio ?? false;
                 var maxVideoBitrate = pluginConfig?.MaxVideoBitrate ?? 120;
+                var videoTranscodingMode = NormalizeVideoTranscodingMode(
+                    pluginConfig?.VideoTranscodingMode,
+                    forceTranscodeVideo,
+                    enableDirectStreaming);
+                var audioTranscodingMode = NormalizeAudioTranscodingMode(
+                    pluginConfig?.AudioTranscodingMode,
+                    forceTranscodeAudio);
+                var allowVideoStreamCopy = videoTranscodingMode != TranscodingModeForce;
+                var allowAudioStreamCopy = audioTranscodingMode != TranscodingModeForce;
+                var enableVideoPlaybackTranscoding = videoTranscodingMode != TranscodingModeDisabled;
+                var enableAudioPlaybackTranscoding = audioTranscodingMode != TranscodingModeDisabled;
 
-                if (forceTranscodeVideo)
+                if (videoTranscodingMode == TranscodingModeForce)
                 {
                     // Force transcoding mode - use H.264 for maximum compatibility
                     videoCodecs = ["h264"];
                 }
-                else if (enableDirectStreaming)
+                else
                 {
                     // Direct streaming mode - advertise support for modern codecs
                     // AV1 removed: Stremio web player shows black screen with AV1
-                    // Jellyfin will transcode AV1 to H.264 while copying HEVC/H.264 directly
+                    // Adaptive mode lets Jellyfin transcode AV1 to H.264 while
+                    // disabled mode rejects it instead of transcoding.
                     videoCodecs = ["hevc", "h264"];
                 }
-                else
-                {
-                    // Legacy mode - force H.264 transcoding (original behavior)
-                    videoCodecs = ["h264"];
-                }
 
-                if (forceTranscodeAudio)
+                if (audioTranscodingMode == TranscodingModeForce)
                 {
                     // Force audio transcoding
                     audioCodecs = ["aac"];
@@ -399,8 +461,12 @@ public class AddonController : ControllerBase
                         ["api_key"] = authToken,
                         ["videoCodec"] = string.Join(',', videoCodecs),
                         ["audioCodec"] = string.Join(',', audioCodecs),
-                        ["enableDirectPlay"] = enableDirectStreaming ? "true" : "false",
-                        ["enableDirectStream"] = enableDirectStreaming ? "true" : "false",
+                        ["enableDirectPlay"] = "true",
+                        ["enableDirectStream"] = "true",
+                        ["enableVideoPlaybackTranscoding"] = enableVideoPlaybackTranscoding ? "true" : "false",
+                        ["enableAudioPlaybackTranscoding"] = enableAudioPlaybackTranscoding ? "true" : "false",
+                        ["allowVideoStreamCopy"] = allowVideoStreamCopy ? "true" : "false",
+                        ["allowAudioStreamCopy"] = allowAudioStreamCopy ? "true" : "false",
                         ["maxAudioChannels"] = "6",
                         ["videoBitRate"] = $"{maxVideoBitrate * 1000000}",
                         ["maxWidth"] = "3840",
@@ -414,23 +480,23 @@ public class AddonController : ControllerBase
 
                     var audioLabel = GetAudioStreamLabel(audioStream);
                     var streamUrl = $"{baseUrl}/Videos/{dto.Id}/master.m3u8{QueryString.Create(queryParameters)}";
-                    
+
                     // Enhanced logging with codec info
                     var sourceVideoCodec = source.MediaStreams
                         .FirstOrDefault(s => s.Type == MediaStreamType.Video)?.Codec ?? "unknown";
                     var sourceAudioCodec = audioStream?.Codec ?? "unknown";
-                    
+
                     LogBuffer.AddLog($"[Stream] Generated stream for {dto.Name} ({dto.Id}):", LogLevel.Info);
                     LogBuffer.AddLog($"[Stream]   Source video: {sourceVideoCodec}, Source audio: {sourceAudioCodec}", LogLevel.Info);
-                    
-                    var targetVideo = forceTranscodeVideo ? "H.264 (transcode)" : (enableDirectStreaming ? "Direct stream" : "H.264 (transcode)");
+
+                    var targetVideo = DescribeVideoTarget(videoTranscodingMode);
                     LogBuffer.AddLog($"[Stream]   Target video: {targetVideo}", LogLevel.Info);
-                    
-                    var targetAudio = forceTranscodeAudio ? "transcode" : "direct stream";
+
+                    var targetAudio = DescribeAudioTarget(audioTranscodingMode);
                     LogBuffer.AddLog($"[Stream]   Target audio: {audioLabel} ({targetAudio})", LogLevel.Info);
-                    
+
                     LogBuffer.AddLog($"[Stream]   URL: {streamUrl}", LogLevel.Info);
-                    
+
                     return new StreamDto
                     {
                         Url = streamUrl,

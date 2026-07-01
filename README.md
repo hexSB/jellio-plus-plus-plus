@@ -17,10 +17,10 @@ Every fork gets another `+`. We don't make the rules.
 - **Full Library Integration** - Access your entire Jellyfin movie and TV show collection in Stremio
 - **Cross-Platform** - Works on all Stremio-supported devices (Windows, macOS, Linux, Android, iOS)
 - **HLS Streaming** - Adaptive bitrate streaming with proper seeking via `master.m3u8`
-- **Transcoding Controls** - Enable/disable direct streaming, force video/audio transcoding, and set max video bitrate
+- **Transcoding Controls** - Choose adaptive, forced, or disabled transcoding separately for video and audio
 - **Subtitle Support** - Text subtitles (SRT, ASS, VTT) served from Jellyfin; OpenSubtitles hash for automatic subtitle matching
 - **Audio Track Selection** - Pick specific audio tracks (language, codec, channels) directly in Stremio
-- **AV1 Compatibility** - Automatic transcoding of AV1 to H.264 to prevent black screen issues
+- **AV1 Compatibility** - Adaptive video mode transcodes AV1 to H.264 to prevent black screen issues
 - **Public Base URL** - Override the server URL for HTTPS connectivity behind reverse proxies or tunnels
 - **Jellyseerr Integration** - Request missing content directly from Stremio
 - **Logs Viewer** - In-app streaming logs with auto-refresh for debugging
@@ -58,9 +58,8 @@ NOTICE: Your Jellyfin instance needs to be reachable over HTTPS because Stremio 
 
 ### Transcoding Settings
 
-- **Enable Direct Streaming** (default: on) - Copies HEVC/H.264 video and Opus/EAC3/AAC audio directly without re-encoding
-- **Force Transcode Video** - Forces all video to be transcoded to H.264
-- **Force Transcode Audio** - Forces all audio to be transcoded to AAC
+- **Video Transcoding Mode** (default: Adaptive) - Adaptive copies HEVC/H.264 when supported and transcodes unsupported video; Force Transcode always re-encodes to H.264; No Transcode never requests video transcoding
+- **Audio Transcoding Mode** (default: Adaptive) - Adaptive copies Opus/EAC3/AAC when supported and transcodes unsupported audio; Force Transcode always re-encodes to AAC; No Transcode never requests audio transcoding
 - **Max Video Bitrate** - Maximum video bitrate in Mbps (10-200, default: 120)
 
 ### Public Base URL

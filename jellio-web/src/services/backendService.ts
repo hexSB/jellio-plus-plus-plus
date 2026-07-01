@@ -60,6 +60,8 @@ export const saveConfigDataSchema = z.object({
   publicBaseUrl: z.string().optional(),
   selectedLibraries: z.array(z.string()).optional(),
   // Transcoding settings
+  videoTranscodingMode: z.enum(['adaptive', 'force', 'disabled']),
+  audioTranscodingMode: z.enum(['adaptive', 'force', 'disabled']),
   enableDirectStreaming: z.boolean(),
   forceTranscodeVideo: z.boolean(),
   forceTranscodeAudio: z.boolean(),

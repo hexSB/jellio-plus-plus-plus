@@ -38,6 +38,8 @@ const ConfigForm: FC<Props> = ({ serverInfo }) => {
       jellyseerrApiKey: '',
       publicBaseUrl: '',
       // Transcoding settings
+      videoTranscodingMode: 'adaptive',
+      audioTranscodingMode: 'adaptive',
       enableDirectStreaming: true,
       forceTranscodeVideo: false,
       forceTranscodeAudio: false,
@@ -70,6 +72,8 @@ const ConfigForm: FC<Props> = ({ serverInfo }) => {
               lib.key.replace(/-/g, ''),
             ) ?? [],
           // Transcoding settings
+          videoTranscodingMode: values.videoTranscodingMode ?? 'adaptive',
+          audioTranscodingMode: values.audioTranscodingMode ?? 'adaptive',
           enableDirectStreaming: values.enableDirectStreaming ?? true,
           forceTranscodeVideo: values.forceTranscodeVideo ?? false,
           forceTranscodeAudio: values.forceTranscodeAudio ?? false,

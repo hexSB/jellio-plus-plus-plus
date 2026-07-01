@@ -6,6 +6,8 @@ import { getConfigFromServer } from '@/services/backendService';
 import type { Library } from '@/types';
 
 const STORAGE_KEY = 'jelliopp_config';
+const transcodingModes = ['adaptive', 'force', 'disabled'] as const;
+type TranscodingMode = (typeof transcodingModes)[number];
 
 const storedConfigSchema = z.object({
   libraries: z
@@ -22,6 +24,8 @@ const storedConfigSchema = z.object({
   jellyseerrApiKey: z.string().optional(),
   publicBaseUrl: z.string().optional(),
   // Transcoding settings
+  videoTranscodingMode: z.enum(transcodingModes).optional(),
+  audioTranscodingMode: z.enum(transcodingModes).optional(),
   enableDirectStreaming: z.boolean().optional(),
   forceTranscodeVideo: z.boolean().optional(),
   forceTranscodeAudio: z.boolean().optional(),
@@ -31,6 +35,49 @@ const storedConfigSchema = z.object({
 type StoredConfig = z.infer<typeof storedConfigSchema>;
 
 const stripTrailingSlash = (url: string) => url.replace(/\/+$/, '');
+
+const normalizeVideoMode = (
+  mode: TranscodingMode | undefined,
+  forceTranscodeVideo: boolean | undefined,
+  enableDirectStreaming: boolean | undefined,
+): TranscodingMode => {
+  if (mode) return mode;
+  if (forceTranscodeVideo || enableDirectStreaming === false) return 'force';
+  return 'adaptive';
+};
+
+const normalizeAudioMode = (
+  mode: TranscodingMode | undefined,
+  forceTranscodeAudio: boolean | undefined,
+): TranscodingMode => {
+  if (mode) return mode;
+  return forceTranscodeAudio ? 'force' : 'adaptive';
+};
+
+const applyTranscodingConfig = (
+  form: UseFormReturn<ConfigFormType>,
+  config: Partial<StoredConfig>,
+) => {
+  const videoMode = normalizeVideoMode(
+    config.videoTranscodingMode,
+    config.forceTranscodeVideo,
+    config.enableDirectStreaming,
+  );
+  const audioMode = normalizeAudioMode(
+    config.audioTranscodingMode,
+    config.forceTranscodeAudio,
+  );
+
+  form.setValue('videoTranscodingMode', videoMode);
+  form.setValue('audioTranscodingMode', audioMode);
+  form.setValue('enableDirectStreaming', videoMode !== 'force');
+  form.setValue('forceTranscodeVideo', videoMode === 'force');
+  form.setValue('forceTranscodeAudio', audioMode === 'force');
+
+  if (config.maxVideoBitrate !== undefined) {
+    form.setValue('maxVideoBitrate', config.maxVideoBitrate);
+  }
+};
 
 export const useConfigStorage = (
   form: UseFormReturn<ConfigFormType>,
@@ -62,22 +109,7 @@ export const useConfigStorage = (
             if (config.publicBaseUrl) {
               form.setValue('publicBaseUrl', config.publicBaseUrl);
             }
-            // Transcoding settings
-            if (config.enableDirectStreaming !== undefined) {
-              form.setValue(
-                'enableDirectStreaming',
-                config.enableDirectStreaming,
-              );
-            }
-            if (config.forceTranscodeVideo !== undefined) {
-              form.setValue('forceTranscodeVideo', config.forceTranscodeVideo);
-            }
-            if (config.forceTranscodeAudio !== undefined) {
-              form.setValue('forceTranscodeAudio', config.forceTranscodeAudio);
-            }
-            if (config.maxVideoBitrate !== undefined) {
-              form.setValue('maxVideoBitrate', config.maxVideoBitrate);
-            }
+            applyTranscodingConfig(form, config);
           }
         }
 
@@ -98,28 +130,7 @@ export const useConfigStorage = (
           if (serverConfig.publicBaseUrl) {
             form.setValue('publicBaseUrl', serverConfig.publicBaseUrl);
           }
-          // Transcoding settings
-          if (serverConfig.enableDirectStreaming !== undefined) {
-            form.setValue(
-              'enableDirectStreaming',
-              serverConfig.enableDirectStreaming,
-            );
-          }
-          if (serverConfig.forceTranscodeVideo !== undefined) {
-            form.setValue(
-              'forceTranscodeVideo',
-              serverConfig.forceTranscodeVideo,
-            );
-          }
-          if (serverConfig.forceTranscodeAudio !== undefined) {
-            form.setValue(
-              'forceTranscodeAudio',
-              serverConfig.forceTranscodeAudio,
-            );
-          }
-          if (serverConfig.maxVideoBitrate !== undefined) {
-            form.setValue('maxVideoBitrate', serverConfig.maxVideoBitrate);
-          }
+          applyTranscodingConfig(form, serverConfig);
           if (serverConfig.selectedLibraries && availableLibraries) {
             // Server stores library IDs as 32-char guids without dashes
             const selectedLibraries = serverConfig.selectedLibraries
@@ -158,6 +169,8 @@ export const useConfigStorage = (
         jellyseerrApiKey: values.jellyseerrApiKey,
         publicBaseUrl: stripTrailingSlash(values.publicBaseUrl ?? ''),
         // Transcoding settings
+        videoTranscodingMode: values.videoTranscodingMode,
+        audioTranscodingMode: values.audioTranscodingMode,
         enableDirectStreaming: values.enableDirectStreaming,
         forceTranscodeVideo: values.forceTranscodeVideo,
         forceTranscodeAudio: values.forceTranscodeAudio,

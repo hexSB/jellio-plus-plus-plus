@@ -12,6 +12,8 @@ public class SaveConfigRequest
     public List<string>? SelectedLibraries { get; set; }
 
     // Transcoding settings
+    public string? VideoTranscodingMode { get; set; }
+    public string? AudioTranscodingMode { get; set; }
     public bool EnableDirectStreaming { get; set; } = true;
     public bool ForceTranscodeVideo { get; set; } = false;
     public bool ForceTranscodeAudio { get; set; } = false;

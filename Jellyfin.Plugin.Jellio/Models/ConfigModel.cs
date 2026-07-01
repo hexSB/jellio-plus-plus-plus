@@ -20,6 +20,8 @@ public class ConfigModel
     public string? PublicBaseUrl { get; init; }
 
     // Transcoding settings
+    public string? VideoTranscodingMode { get; init; }
+    public string? AudioTranscodingMode { get; init; }
     public bool EnableDirectStreaming { get; init; } = true;
     public bool ForceTranscodeVideo { get; init; } = false;
     public bool ForceTranscodeAudio { get; init; } = false;
