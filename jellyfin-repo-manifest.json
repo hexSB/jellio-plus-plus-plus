@@ -12,8 +12,8 @@
                 "changelog": "Fix adaptive video transcoding so only 4K AV1 is forced through Jellyfin transcoding based on Stremio verification results.\n\n- Adaptive mode transcodes 4K AV1 to H.264.\n- 1080p AV1 remains a direct/remux candidate.\n- 4K HEVC and 4K AVC remain direct/remux candidates.\n- No-transcode mode continues to disable video playback transcoding, including unsupported formats.",
                 "targetAbi": "12.0.0.0",
                 "sourceUrl": "https://github.com/hexSB/jellio-plus-plus-plus/releases/download/v1.9.1.0/jellio_1.9.1.0.zip",
-                "checksum": "df6ca9c04355d999281b2290cfbf7556",
-                "timestamp": "2026-07-01T06:35:09Z"
+                "checksum": "c2860e09adf62734f1e159885cc0f057",
+                "timestamp": "2026-07-01T06:35:17Z"
             },
             {
                 "version": "1.9.0.0",
