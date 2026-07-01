@@ -8,6 +8,14 @@
         "category": "General",
         "versions": [
             {
+                "version": "1.9.4.0",
+                "changelog": "Fix forced transcode negotiation.\\n\\n- Disable direct play/direct stream when video or audio forced transcode is selected.\\n- Keep stream copy disabled for forced modes so Jellyfin cannot fall back to AV1/Opus copy.\\n- Add tests for direct playback flag behavior.",
+                "targetAbi": "12.0.0.0",
+                "sourceUrl": "https://github.com/hexSB/jellio-plus-plus-plus/releases/download/v1.9.4.0/jellio_1.9.4.0.zip",
+                "checksum": "01d3313d6bb50adc16b3703d2f004b35",
+                "timestamp": "2026-07-01T08:32:20Z"
+            },
+            {
                 "version": "1.9.3.0",
                 "changelog": "Fix adaptive playback negotiation for TV/projector clients.\\n\\n- Restore AAC-first audio fallback so TRUEHD tracks do not transcode to Opus by default.\\n- Preserve HEVC direct stream support for HDR/Dolby Vision capable playback paths.\\n- Remove the adaptive maxAudioChannels cap that could force compatible 7.1 tracks to transcode.\\n- Add tests for codec negotiation behavior.",
                 "targetAbi": "12.0.0.0",
