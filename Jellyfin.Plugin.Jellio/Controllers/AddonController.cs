@@ -276,6 +276,39 @@ public class AddonController : ControllerBase
         };
     }
 
+    internal static string[] GetVideoCodecs(MediaSourceInfo source, string videoTranscodingMode)
+    {
+        if (videoTranscodingMode == TranscodingModeForce)
+        {
+            return ["h264"];
+        }
+
+        return videoTranscodingMode == TranscodingModeAdaptive
+            && ShouldForceAdaptiveAv1Transcode(source)
+            ? ["h264"]
+            : ["hevc", "h264", "av1"];
+    }
+
+    internal static bool ShouldForceAdaptiveAv1Transcode(MediaSourceInfo source)
+    {
+        var videoStream = source.MediaStreams
+            .FirstOrDefault(stream => stream.Type == MediaStreamType.Video);
+
+        if (!IsAv1Codec(videoStream?.Codec))
+        {
+            return false;
+        }
+
+        return (videoStream?.Height ?? 0) > 1080
+            || (videoStream?.Width ?? 0) > 1920;
+    }
+
+    private static bool IsAv1Codec(string? codec)
+    {
+        return string.Equals(codec, "av1", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(codec, "av01", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static MetaDto MapToMeta(
         BaseItemDto dto,
         StremioType stremioType,
@@ -405,10 +438,9 @@ public class AddonController : ControllerBase
                  * Adaptive mode preserves original quality when possible.
                  * Jellyfin transcodes unsupported tracks only when the matching
                  * video/audio transcoding mode allows it.
-                 * Video codecs: HEVC, H.264 (AV1 removed - Stremio web player doesn't decode it properly)
+                 * Video codecs: AV1 up to 1080p, HEVC, H.264
                  * Audio codecs: OPUS, EAC3, AAC (Stremio supports OPUS on desktop)
                  */
-                string[] videoCodecs;
                 string[] audioCodecs;
 
                 var pluginConfig = Plugin.Instance?.Configuration;
@@ -428,20 +460,6 @@ public class AddonController : ControllerBase
                 var enableVideoPlaybackTranscoding = videoTranscodingMode != TranscodingModeDisabled;
                 var enableAudioPlaybackTranscoding = audioTranscodingMode != TranscodingModeDisabled;
 
-                if (videoTranscodingMode == TranscodingModeForce)
-                {
-                    // Force transcoding mode - use H.264 for maximum compatibility
-                    videoCodecs = ["h264"];
-                }
-                else
-                {
-                    // Direct streaming mode - advertise support for modern codecs
-                    // AV1 removed: Stremio web player shows black screen with AV1
-                    // Adaptive mode lets Jellyfin transcode AV1 to H.264 while
-                    // disabled mode rejects it instead of transcoding.
-                    videoCodecs = ["hevc", "h264"];
-                }
-
                 if (audioTranscodingMode == TranscodingModeForce)
                 {
                     // Force audio transcoding
@@ -455,6 +473,7 @@ public class AddonController : ControllerBase
 
                 return streamChoices.Select(audioStream =>
                 {
+                    var videoCodecs = GetVideoCodecs(source, videoTranscodingMode);
                     var queryParameters = new Dictionary<string, string?>
                     {
                         ["mediaSourceId"] = source.Id,
