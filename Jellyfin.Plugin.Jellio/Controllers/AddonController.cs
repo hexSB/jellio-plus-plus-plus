@@ -98,7 +98,7 @@ public class AddonController : ControllerBase
             return ReturnJellyseerrRequestStream(config, imdbId, type, title, season, episode);
         }
 
-        var status = await JellyseerrStatusService.GetMediaStatus(client, tmdbId.Value);
+        var status = await JellyseerrStatusService.GetMediaStatus(client, tmdbId.Value, type);
         LogBuffer.AddLog($"[Jellyseerr] Media status for TMDB {tmdbId}: {status}", LogLevel.Info);
 
         return status switch

@@ -1,15 +1,13 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.Jellio.Helpers;
 using Jellyfin.Plugin.Jellio.Models;
+using Jellyfin.Plugin.Jellio.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
 
 namespace Jellyfin.Plugin.Jellio.Controllers;
 
@@ -18,7 +16,7 @@ namespace Jellyfin.Plugin.Jellio.Controllers;
 [Route("jelliopp/{config}/jellyseerr")]
 public class RequestController : ControllerBase
 {
-    // Simple in-memory cache to prevent duplicate requests (userId:imdbId:type -> timestamp)
+    // Simple in-memory cache to prevent concurrent duplicate requests (userId:tmdbId:type -> timestamp)
     private static readonly ConcurrentDictionary<string, DateTime> _requestCache = new();
     private static readonly ConcurrentDictionary<string, object> _requestLocks = new();
     private static readonly TimeSpan _cacheDuration = TimeSpan.FromSeconds(30);
@@ -85,13 +83,6 @@ public class RequestController : ControllerBase
                 Console.WriteLine(errorMsg);
                 LogBuffer.AddLog(errorMsg, LogLevel.Error);
                 return Unauthorized();
-            }
-
-            // Check for duplicate request (with lock to prevent race condition)
-            var identifier = imdbId ?? tmdbId?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? title ?? "unknown";
-            if (!TryMarkAsProcessing(userId.Value, identifier, type))
-            {
-                return Content("✓ Request already sent (duplicate prevented)", "text/plain");
             }
 
             var configMsg = $"[Jellyseerr] Config loaded: Enabled={config.JellyseerrEnabled}, Url={config.JellyseerrUrl}, HasApiKey={!string.IsNullOrWhiteSpace(config.JellyseerrApiKey)}";
@@ -163,6 +154,22 @@ public class RequestController : ControllerBase
 
             bool isTV = string.Equals(type, "tv", StringComparison.OrdinalIgnoreCase);
 
+            // Check for duplicate request (with lock to prevent race condition)
+            var identifier = $"{type}:{id.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+            if (!TryMarkAsProcessing(userId.Value, identifier, type))
+            {
+                return Content("✓ Request already sent (duplicate prevented)", "text/plain");
+            }
+
+            var status = await JellyseerrStatusService.GetMediaStatus(client, id, type);
+            if (JellyseerrStatusService.HasExistingRequestOrMedia(status))
+            {
+                var duplicateMsg = $"[Jellyseerr] Existing Jellyseerr media/request found for {type} TMDB {id}: {status}";
+                Console.WriteLine(duplicateMsg);
+                LogBuffer.AddLog(duplicateMsg, LogLevel.Info);
+                return Content($"✓ Already {DescribeExistingStatus(status)} in Jellyseerr", "text/plain");
+            }
+
             // Build request body - only include seasons for TV shows
             object body;
             if (isTV)
@@ -198,6 +205,7 @@ public class RequestController : ControllerBase
             if (createResp.IsSuccessStatusCode)
             {
                 Console.WriteLine("[Jellyseerr] ✓ Request successful!");
+                JellyseerrStatusService.MarkLocalStatus(id, type, "pending");
 
                 // Already marked in cache at the start, no need to mark again
 
@@ -220,5 +228,17 @@ public class RequestController : ControllerBase
             LogBuffer.AddLog(stackMsg, LogLevel.Error);
             return Problem($"Error creating Jellyseerr request: {ex.Message}", statusCode: 500);
         }
+    }
+
+    private static string DescribeExistingStatus(string status)
+    {
+        return status switch
+        {
+            "pending" => "requested",
+            "processing" => "downloading",
+            "partially_available" => "partially available",
+            "available" => "available",
+            _ => "known",
+        };
     }
 }
